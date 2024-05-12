@@ -1,0 +1,20 @@
+{
+    "name": "carpool-buddies-api",
+    "version": "1.0.0",
+    "description": "Carpool-Buddies Flask API Server",
+    "scripts": {},
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/ChaiShalev18/Carpool-Buddies"
+    },
+    "bugs": {
+        "url": "https://github.com/ChaiShalev18/Carpool-Buddies.git/issues",
+        "email": "carpoolbuddies@gmail.com"
+    },
+    "author": "BGU Students",
+    "engines": {
+        "node": ">=10.0.0"
+    },
+    "dependencies": {},
+    "devDependencies": {}
+}
