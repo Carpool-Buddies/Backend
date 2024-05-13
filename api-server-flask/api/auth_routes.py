@@ -30,6 +30,7 @@ user_edit_model = auth_ns.model('UserEditModel', {"first_name": fields.String(re
                                             "last_name": fields.String(required=True, min_length=1, max_length=32),
                                             "birthday": fields.Date(required=True)
                                             })
+get_code_model = auth_ns.model('GetCodeModel',{"email":fields.String(required=True, min_length=1, max_length=32)})
 
 
 
@@ -56,6 +57,19 @@ class Register(Resource):
         _birthday = req_data.get("birthday")
 
         return auth.register_user(_email, _password, _first_name, _last_name, _phone_number, _birthday)
+
+
+@auth_ns.route('/GetCode')
+class GetCode (Resource):
+    """
+       Creates a new user by taking 'signup_model' input
+    """
+
+    @auth_ns.expect(get_code_model, validate=True)
+    def post(self):
+        req_data = request.get_json()
+        _email = req_data.get("email")
+        return auth.getCode(_email)
 
 
 @auth_ns.route('/login')
@@ -114,3 +128,4 @@ class Home(Resource):
     @token_required
     def get(self, current_user):
         return {"success": True, "message": "User is logged in.", "user": current_user.toJSON()}, 200
+

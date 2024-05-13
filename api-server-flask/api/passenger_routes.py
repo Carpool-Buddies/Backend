@@ -1,15 +1,16 @@
 from flask import request
 from flask_restx import Resource, Namespace, fields
-
+from services.passenger_service import PassengerService
 from services.driver_service import DriverService
 
 from .token_decorators import token_required
 
 # TODO: After adding the passenger service remove from comment
-# passenger_service = PassengerService()
+passenger_service = PassengerService()
 
 # Namespace for Driver
-passenger_ns = Namespace('passenger', description='Passenger related operations')
+authorizations = {'JWT Bearer': {'type': 'apiKey', 'in': 'header', 'name': 'Authorization'}}
+passenger_ns = Namespace('passenger', description='Passenger related operations', authorizations=authorizations)
 """
     Flask-Restx models for api request and response data
 """
@@ -45,13 +46,11 @@ class PostFutureRides(Resource):
         _destination = req_data.get("destination")
         _drop_radius = req_data.get("drop_radius")
         _departure_datetime = req_data.get("departure_datetime")
-        _available_seats = req_data.get("available_seats")
         _notes = req_data.get("notes")
 
         # Call the service method to post the future ride
-        # success = driver_service.post_future_ride(_departure_location, _pickup_radius, _destination,
-        #                                           _drop_radius, _departure_datetime, _available_seats, _notes)
-        success = True
+        success = passenger_service.makeRideOffer(current_user.id,_departure_location,_pickup_radius,_destination,
+                                                  _drop_radius,_departure_datetime,_notes)
         if success:
             return {"success": True}, 200
         else:

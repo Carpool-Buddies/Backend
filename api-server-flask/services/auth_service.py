@@ -1,14 +1,33 @@
+import random
+
 from api.config import BaseConfig
 from models.users import Users
 from services.user import User
 
 from utils.auth_exceptions import *
+import smtplib
+from email.message import EmailMessage
 
 from datetime import datetime, timedelta, timezone
 
 import jwt
 
 from models import Users, JWTTokenBlocklist
+from models.verification_codes import VerificationCodes
+
+
+def send_verification_mail(_receiver, _code):
+    email = "carpool.buddies2024@gmail.com"
+    subject = "Verification Code"
+    msg = EmailMessage()
+    msg.set_content("your verification code is: " + str(_code))
+    msg['subject'] = subject
+    msg['to'] = _receiver
+    server = smtplib.SMTP("smtp.gmail.com", 587)
+    server.starttls()
+    server.login(email, "yire zqbh pgnj xygt")
+    server.send_message(msg)
+    server.quit()
 
 
 class AuthService:
@@ -37,6 +56,24 @@ class AuthService:
         except Exception as e:
             # TODO add e in debug
             return {"success": False, "msg": "Internal server error"}, 500
+
+    @staticmethod
+    def getCode(_email):
+        user_exists = Users.get_by_email(_email)
+
+        if not user_exists:
+            return {"success": False,
+                    "msg": "This email does not exist."}, 400
+        try:
+            code = random.randint(100000, 999999)
+            verify = VerificationCodes(email=_email, code=code,date_send=datetime.utcnow())
+            VerificationCodes.send_code(verify)
+            send_verification_mail(_email,code)
+        except Exception as e:
+            return {"success": False,
+                    "msg": "Error in sending Email"}, 400
+        return {"success": True,
+                "msg": "code sent to " + str(_email)}, 200
 
     @staticmethod
     def login(_email, _password):
@@ -74,7 +111,8 @@ class AuthService:
 
     @staticmethod
     def edit_user(current_user, _new_first_name, _new_last_name, _new_phone_number, _new_birthday):
-        user_exists = User(current_user.email, current_user.password, current_user.first_name, current_user.last_name, current_user.phone_number, current_user.birthday, current_user)
+        user_exists = User(current_user.email, current_user.password, current_user.first_name, current_user.last_name,
+                           current_user.phone_number, current_user.birthday, current_user)
         if _new_first_name:
             user_exists.update_first_name(_new_first_name)
 
@@ -88,5 +126,3 @@ class AuthService:
             user_exists.update_birthday(_new_birthday)
 
         return {"success": True}, 200
-
-
