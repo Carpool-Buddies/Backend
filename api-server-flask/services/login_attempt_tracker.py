@@ -10,6 +10,8 @@ class LoginAttemptTracker:
         self.attempts[email].append(datetime.utcnow())
 
     def get_attempts(self, email):
+        if email not in self.attempts:
+            return 0
         now = datetime.utcnow()
         self.attempts[email] = [attempt for attempt in self.attempts[email] if now - attempt < timedelta(minutes=15)]
         return len(self.attempts[email])

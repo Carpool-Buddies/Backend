@@ -19,9 +19,8 @@ USER_REGISTRATION_SUCCESS_MESSAGE = "User registered successfully"
 USER_REGISTRATION_INVALID_EMAIL_MESSAGE = "Invalid email format"
 USER_REGISTRATION_INVALID_PASSWORD_MESSAGE = "Password must contain at least one uppercase letter, one lowercase letter and one digit."
 USER_REGISTRATION_INVALID_BIRTHDAY_MESSAGE = "Invalid birthday date"
-USER_ALREADY_EXISTS_MESSAGE = "already exists!"
-UN_EXISTS_USER_LOGIN = "This email does not exist."
-INCORRECT_CREDENTIALS_LOGIN = "Wrong credentials."
+USER_ALREADY_EXISTS_MESSAGE = "already exists"
+INCORRECT_CREDENTIALS_LOGIN = "Invalid credentials."
 REGISTRATION_FAILED = "Registration failed:"
 FUTURE_RIDES_INVALID_INPUT_MESSAGE = ""
 # TODO extract to constants class
@@ -175,9 +174,7 @@ def test_GivenValidUserData_thenLogin_returnSuccessCodeAndMsg(email, password, f
     """
        Tests /users/register API
     """
-    # Sign up the user to the system
-    test_GivenValidUserData_thenSignUp_returnSuccessCodeAndMsg(email, password, first_name, last_name, phone_number, birthday, client)
-
+    register(client, email, password, first_name, last_name, phone_number, birthday)
     # login
     response = login(client, email, password)
     data = json.loads(response.data.decode())
@@ -196,7 +193,7 @@ def test_GivenUnexitstsUser_thenLogin_returnAppropriateCodeAndMsg(email, passwor
     response = login(client, email, password)
     data = json.loads(response.data.decode())
     assert response.status_code == BAD_REQUEST_CODE
-    assert UN_EXISTS_USER_LOGIN in data["msg"]
+    assert INCORRECT_CREDENTIALS_LOGIN in data["msg"]
 
 @pytest.mark.parametrize("email, password, first_name, last_name, phone_number, birthday", [
     # Test case 1: All fields are valid

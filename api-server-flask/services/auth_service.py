@@ -11,10 +11,6 @@ import jwt
 
 from models import Users, JWTTokenBlocklist
 
-
-
-
-
 class AuthService:
 
     @staticmethod
