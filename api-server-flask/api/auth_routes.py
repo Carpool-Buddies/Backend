@@ -1,5 +1,9 @@
+from datetime import datetime
+
+import pytz
 from flask import request
 from flask_restx import Resource, Namespace, fields
+from flask import session
 
 from services.auth_service import AuthService
 from .token_decorators import token_required
@@ -15,28 +19,29 @@ auth_ns = Namespace('auth', description='Authentication and user management', au
 """
 
 signup_model = auth_ns.model('SignUpModel', {"email": fields.String(required=True, min_length=4, max_length=64),
-                                              "password": fields.String(required=True, min_length=6, max_length=32),
-                                              "first_name": fields.String(required=True, min_length=1, max_length=32),
-                                              "last_name": fields.String(required=True, min_length=1, max_length=32),
-                                              "phone_number": fields.String(required=True, min_length=4, max_length=32),
-                                              "birthday": fields.Date(required=True)
-                                              })
+                                             "password": fields.String(required=True, min_length=6, max_length=32),
+                                             "first_name": fields.String(required=True, min_length=1, max_length=32),
+                                             "last_name": fields.String(required=True, min_length=1, max_length=32),
+                                             "phone_number": fields.String(required=True, min_length=4, max_length=32),
+                                             "birthday": fields.Date(required=True)
+                                             })
 
 login_model = auth_ns.model('LoginModel', {"email": fields.String(required=True, min_length=4, max_length=64),
-                                            "password": fields.String(required=True, min_length=4, max_length=16)
-                                            })
+                                           "password": fields.String(required=True, min_length=4, max_length=16)
+                                           })
 
-user_edit_model = auth_ns.model('UserEditModel', {"first_name": fields.String(required=True, min_length=1, max_length=32),
-                                            "last_name": fields.String(required=True, min_length=1, max_length=32),
-                                            "birthday": fields.Date(required=True)
-                                            })
-get_code_model = auth_ns.model('GetCodeModel',{"email":fields.String(required=True, min_length=1, max_length=32)})
-
-
+user_edit_model = auth_ns.model('UserEditModel',
+                                {"first_name": fields.String(required=True, min_length=1, max_length=32),
+                                 "last_name": fields.String(required=True, min_length=1, max_length=32),
+                                 "birthday": fields.Date(required=True)
+                                 })
+get_code_model = auth_ns.model('GetCodeModel', {"email": fields.String(required=True, min_length=1, max_length=32)})
+enter_code_model = auth_ns.model('EnterCodeModel', {"code": fields.String(required=True, min_length=1, max_length=32)})
 
 """
     Flask-Restx routes
 """
+
 
 @auth_ns.route('/register')
 class Register(Resource):
@@ -46,7 +51,7 @@ class Register(Resource):
 
     @auth_ns.expect(signup_model, validate=True)
     def post(self):
-
+        session["Hello"] = "World"
         req_data = request.get_json()
 
         _email = req_data.get("email")
@@ -60,16 +65,34 @@ class Register(Resource):
 
 
 @auth_ns.route('/GetCode')
-class GetCode (Resource):
-    """
-       Creates a new user by taking 'signup_model' input
-    """
+class GetCode(Resource):
 
     @auth_ns.expect(get_code_model, validate=True)
     def post(self):
+        session["Hello"] = "World"
         req_data = request.get_json()
         _email = req_data.get("email")
-        return auth.getCode(_email)
+        resp = auth.getCode(_email)
+        if resp[0]['success']:
+            session["email"] = _email
+        return resp
+
+
+@auth_ns.route('/EnterCode')
+class EnterCode(Resource):
+    @auth_ns.expect(enter_code_model, validate=True)
+    def post(self):
+        print(session)
+        req_data = request.get_json()
+        if "email" not in session:
+            return {"success": False,
+                    "msg": "Code not sent to the email"}, 400
+        _email = session["email"]
+        _code = req_data.get("code")
+        resp = auth.enterCode(_email, _code)
+        if resp[0]['success']:
+            session["verify"] = (_email, datetime.now(pytz.timezone('Israel')))
+        return resp
 
 
 @auth_ns.route('/login')
@@ -80,7 +103,6 @@ class Login(Resource):
 
     @auth_ns.expect(login_model, validate=True)
     def post(self):
-
         req_data = request.get_json()
 
         _email = req_data.get("email")
@@ -95,10 +117,10 @@ class EditUser(Resource):
     """
        Edits User's username or password or both using 'user_edit_model' input
     """
+
     @auth_ns.expect(user_edit_model)
     @token_required
     def post(self, current_user):
-
         req_data = request.get_json()
 
         _new_first_name = req_data.get("first_name")
@@ -121,11 +143,10 @@ class LogoutUser(Resource):
         _jwt_token = request.headers["authorization"]
         return auth.logout(_jwt_token, current_user)
 
-    
+
 @auth_ns.doc(security='JWT Bearer')
 @auth_ns.route('/home')
 class Home(Resource):
     @token_required
     def get(self, current_user):
         return {"success": True, "message": "User is logged in.", "user": current_user.toJSON()}, 200
-

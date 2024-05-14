@@ -1,5 +1,7 @@
 import random
 
+import pytz
+
 from api.config import BaseConfig
 from models.users import Users
 from services.user import User
@@ -66,7 +68,7 @@ class AuthService:
                     "msg": "This email does not exist."}, 400
         try:
             code = random.randint(100000, 999999)
-            verify = VerificationCodes(email=_email, code=code,date_send=datetime.utcnow())
+            verify = VerificationCodes(email=_email, code=code,date_send=datetime.now(pytz.timezone('Israel')))
             VerificationCodes.send_code(verify)
             send_verification_mail(_email,code)
         except Exception as e:
@@ -74,6 +76,21 @@ class AuthService:
                     "msg": "Error in sending Email"}, 400
         return {"success": True,
                 "msg": "code sent to " + str(_email)}, 200
+
+    @staticmethod
+    def enterCode(_email,_code):
+        user_exists = Users.get_by_email(_email)
+
+        if not user_exists:
+            return {"success": False,
+                    "msg": "This email does not exist."}, 400
+        try:
+            VerificationCodes.verify_user(_email,_code)
+        except Exception as e:
+            return {"success": False,
+                    "msg": str(e)}, 400
+        return {"success": True,
+                "msg": "User verified"}, 200
 
     @staticmethod
     def login(_email, _password):
