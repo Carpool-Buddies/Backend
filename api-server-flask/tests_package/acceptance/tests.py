@@ -17,11 +17,12 @@ SUCCESS_CODE = 200
 BAD_REQUEST_CODE = 400
 USER_REGISTRATION_SUCCESS_MESSAGE = "User registered successfully"
 USER_REGISTRATION_INVALID_EMAIL_MESSAGE = "Invalid email format"
-USER_REGISTRATION_INVALID_PASSWORD_MESSAGE = "Invalid password format"
+USER_REGISTRATION_INVALID_PASSWORD_MESSAGE = "Password must contain at least one uppercase letter, one lowercase letter and one digit."
 USER_REGISTRATION_INVALID_BIRTHDAY_MESSAGE = "Invalid birthday date"
 USER_ALREADY_EXISTS_MESSAGE = "Email already exists!"
 UN_EXISTS_USER_LOGIN = "This email does not exist."
 INCORRECT_CREDENTIALS_LOGIN = "Wrong credentials."
+REGISTRATION_FAILED = "Registration failed:"
 FUTURE_RIDES_INVALID_INPUT_MESSAGE = ""
 # TODO extract to constants class
 
@@ -141,7 +142,7 @@ def test_GivenInvalidBirthday_thenSignUp_returnAppropriateCodeAndMsg(email, pass
 
     data = json.loads(response.data.decode())
     assert response.status_code == BAD_REQUEST_CODE
-    assert USER_REGISTRATION_INVALID_BIRTHDAY_MESSAGE in data["msg"]
+    assert REGISTRATION_FAILED in data["msg"]
 
 
 

@@ -28,7 +28,7 @@ class Users(db.Model):
     @staticmethod
     def register_user(user):
         if Users.get_by_email(user.email):
-            raise EmailAlreadyExistsError("Email already exists.")
+            raise EmailAlreadyExistsError(user.email)
 
         new_user = Users(
             email=user.email,
