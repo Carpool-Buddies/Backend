@@ -57,7 +57,3 @@ Now, the API can be accessed on port `5001`
 
 <br />
 
-> Update the API port used by the React Frontend
-
-**API Server URL** - `src/config/constant.js` 
-
