@@ -1,7 +1,7 @@
 import random
 
 import pytz
-
+import re
 from api.config import BaseConfig
 from models.users import Users
 from services.user import User
@@ -15,7 +15,21 @@ from datetime import datetime, timedelta, timezone
 import jwt
 
 from models import Users, JWTTokenBlocklist
-from models.verification_codes import VerificationCodes
+from models.verification_codes import VerificationCodes, time_left
+
+def validate_password(password):
+    """
+    Validates a password to ensure it meets the following criteria:
+    - Length of at least 8 characters
+    - Contains at least one uppercase letter
+    - Contains at least one lowercase letter
+    - Contains at least one digit
+    """
+    # Combining all conditions into a single regular expression for efficiency
+    regex = re.compile(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$')
+    if not regex.search(password):
+        raise PasswordValidationError(
+            "Password must contain at least one uppercase letter, one lowercase letter and one digit.")
 
 
 def send_verification_mail(_receiver, _code):
@@ -30,6 +44,9 @@ def send_verification_mail(_receiver, _code):
     server.login(email, "yire zqbh pgnj xygt")
     server.send_message(msg)
     server.quit()
+
+
+
 
 
 class AuthService:
@@ -68,9 +85,9 @@ class AuthService:
                     "msg": "This email does not exist."}, 400
         try:
             code = random.randint(100000, 999999)
-            verify = VerificationCodes(email=_email, code=code,date_send=datetime.now(pytz.timezone('Israel')))
+            verify = VerificationCodes(email=_email, code=code, date_send=datetime.now(pytz.timezone('Israel')))
             VerificationCodes.send_code(verify)
-            send_verification_mail(_email,code)
+            send_verification_mail(_email, code)
         except Exception as e:
             return {"success": False,
                     "msg": "Error in sending Email"}, 400
@@ -78,14 +95,14 @@ class AuthService:
                 "msg": "code sent to " + str(_email)}, 200
 
     @staticmethod
-    def enterCode(_email,_code):
+    def enterCode(_email, _code):
         user_exists = Users.get_by_email(_email)
 
         if not user_exists:
             return {"success": False,
                     "msg": "This email does not exist."}, 400
         try:
-            VerificationCodes.verify_user(_email,_code)
+            VerificationCodes.verify_user(_email, _code)
         except Exception as e:
             return {"success": False,
                     "msg": str(e)}, 400
@@ -143,3 +160,27 @@ class AuthService:
             user_exists.update_birthday(_new_birthday)
 
         return {"success": True}, 200
+
+    @staticmethod
+    def forget_password(verify_user, password, confirmPassword):
+        user_exists = Users.get_by_email(verify_user[0])
+        if not user_exists:
+            return {"success": False,
+                    "msg": "This email does not exist."}, 400
+        if not time_left(verify_user[1], datetime.now(pytz.timezone('Israel'))):
+            return {"success": False,
+                    "msg": "Time has expired"}, 403
+        try:
+            validate_password(password)
+        except Exception as e:
+            return {"success": False,
+                    "msg": str(e)}, 400
+        if password == confirmPassword:
+            return {"success": True,
+                    "msg": "password change successfully"}, 200
+        return {"success": False,
+                "msg": "password do not match"}, 400
+
+
+
+

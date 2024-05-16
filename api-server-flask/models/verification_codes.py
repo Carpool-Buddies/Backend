@@ -10,8 +10,8 @@ def time_left(date1, date2):
     israel_timezone = pytz.timezone('Israel')
     new_date = israel_timezone.localize(date1)
     difference = date2 - new_date
-    one_minute = timedelta(minutes=1)
-    return difference <= one_minute
+    minute = timedelta(minutes=3)
+    return difference <= minute
 
 
 class VerificationCodes(db.Model):
