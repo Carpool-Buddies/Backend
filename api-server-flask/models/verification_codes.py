@@ -8,7 +8,10 @@ from utils.auth_exceptions import *
 
 def time_left(date1, date2):
     israel_timezone = pytz.timezone('Israel')
-    new_date = israel_timezone.localize(date1)
+    try:
+        new_date = israel_timezone.localize(date1)
+    except Exception as e:
+        new_date = date1
     difference = date2 - new_date
     minute = timedelta(minutes=3)
     return difference <= minute

@@ -17,6 +17,7 @@ import jwt
 from models import Users, JWTTokenBlocklist
 from models.verification_codes import VerificationCodes, time_left
 
+
 def validate_password(password):
     """
     Validates a password to ensure it meets the following criteria:
@@ -44,9 +45,6 @@ def send_verification_mail(_receiver, _code):
     server.login(email, "yire zqbh pgnj xygt")
     server.send_message(msg)
     server.quit()
-
-
-
 
 
 class AuthService:
@@ -176,11 +174,9 @@ class AuthService:
             return {"success": False,
                     "msg": str(e)}, 400
         if password == confirmPassword:
+            user_exists.set_password(password)
+            user_exists.save()
             return {"success": True,
                     "msg": "password change successfully"}, 200
         return {"success": False,
                 "msg": "password do not match"}, 400
-
-
-
-
