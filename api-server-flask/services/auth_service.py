@@ -11,6 +11,9 @@ import jwt
 
 from models import Users, JWTTokenBlocklist
 
+MAX_ATTEMPTS = 5
+
+
 class AuthService:
 
     @staticmethod
@@ -42,7 +45,7 @@ class AuthService:
     def login(_email, _password):
         try:
             # Check if there are too many login attempts
-            if login_attempt_tracker.get_attempts(_email) >= 5:
+            if login_attempt_tracker.get_attempts(_email) >= MAX_ATTEMPTS:
                 raise TooManyLoginAttemptsError()
 
             user_exists = Users.get_by_email(_email)

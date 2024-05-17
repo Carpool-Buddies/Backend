@@ -7,7 +7,7 @@ from .join_ride_requests import JoinRideRequests
 class Rides(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     driver_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    status = db.Column(db.String(20), nullable=False)
+    status = db.Column(db.String(20), nullable=False, default='waiting')
     departure_location = db.Column(db.String(100), nullable=False)
     pickup_radius = db.Column(db.Float, nullable=False)
     destination = db.Column(db.String(100), nullable=False)

@@ -1,5 +1,3 @@
-# -*- encoding: utf-8 -*-
-
 import pytest
 import json
 
@@ -259,12 +257,13 @@ def test_GivenValidFutureRideData_thenPostRideSuccessfully(departure_location, p
     Tests /api/drivers/post-future-rides API with valid inputs to ensure that future rides are posted successfully.
     """
     register(client, VALID_EMAIL, VALID_PASSWORD, FIRST_NAME, LAST_NAME, VALID_PHONE_NUMBER, VALID_BIRTHDAY)
-    login(client, VALID_EMAIL, VALID_PASSWORD)
-    response = post_future_rides(client, departure_location, pickup_radius, destination, drop_radius, departure_datetime, available_seats, notes)
+    response = login(client, VALID_EMAIL, VALID_PASSWORD)
+    data = json.loads(response.data.decode())
+    response = post_future_rides(client, data["token"], departure_location, pickup_radius, destination, drop_radius, departure_datetime, available_seats, notes)
 
     data = json.loads(response.data.decode())
     assert response.status_code == SUCCESS_CODE
-    assert 'Successfully posted the future ride.' in data["msg"]
+    assert "Ride posted successfully" in data["msg"]
 
 @pytest.mark.parametrize("departure_location, pickup_radius, destination, drop_radius, departure_datetime, available_seats, notes", [
     # Invalid pickup radius (negative value)
@@ -287,8 +286,9 @@ def test_GivenInvalidFutureRideData_thenPost_returnAppropriateCodeAndMsg(departu
     Tests /api/drivers/post-future-rides API with various invalid inputs to ensure proper error handling.
     """
     register(client, VALID_EMAIL, VALID_PASSWORD, FIRST_NAME, LAST_NAME, VALID_PHONE_NUMBER, VALID_BIRTHDAY)
-    login(client, VALID_EMAIL, VALID_PASSWORD)
-    response = post_future_rides(client, departure_location, pickup_radius, destination, drop_radius, departure_datetime, available_seats, notes)
+    response = login(client, VALID_EMAIL, VALID_PASSWORD)
+    data = json.loads(response.data.decode())
+    response = post_future_rides(client, data["token"], departure_location, pickup_radius, destination, drop_radius, departure_datetime, available_seats, notes)
 
     data = json.loads(response.data.decode())
     assert response.status_code == BAD_REQUEST_CODE
@@ -335,7 +335,7 @@ def register(client, email, password, first_name, last_name, phone_number, birth
         content_type="application/json")
     return response
 
-def post_future_rides(client, departure_location, pickup_radius, destination, drop_radius, departure_datetime, available_seats, notes):
+def post_future_rides(client, token, departure_location, pickup_radius, destination, drop_radius, departure_datetime, available_seats, notes):
     response = client.post(
         "/api/drivers/post-future-rides",
         data=json.dumps(
@@ -349,6 +349,6 @@ def post_future_rides(client, departure_location, pickup_radius, destination, dr
                 "notes": notes
             }
         ),
-        headers={'Content-Type': 'application/json', 'accept': 'application/json'}
+        headers={'Content-Type': 'application/json', 'accept': 'application/json', "Authorization": f"{token}"}
     )
     return response

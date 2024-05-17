@@ -1,8 +1,12 @@
 from models import Rides, JoinRideRequests
 from datetime import datetime
 
+from services.future_ride_post import FutureRidePost
+from utils.response import Response
+
 
 class DriverService:
+
     @staticmethod
     def post_future_ride(_driver_id, _departure_location, _pickup_radius, _destination, _drop_radius,
                          _departure_datetime, _available_seats, _notes):
@@ -22,40 +26,30 @@ class DriverService:
         - success: bool, indicates whether the ride posting was successful
         """
         try:
-            # Ensure departure_datetime is in the future
-            if _departure_datetime <= datetime.now():
-                raise ValueError("Departure date must be in the future")
+            future_ride_post = FutureRidePost(
+                driver_id=_driver_id,
+                departure_location=_departure_location,
+                pickup_radius=_pickup_radius,
+                destination=_destination,
+                drop_radius=_drop_radius,
+                departure_datetime=_departure_datetime,
+                available_seats=_available_seats,
+                notes=_notes
+            )
+            future_ride_post.validate()
+            future_ride_post.save()
 
-            # Ensure available_seats is greater than 0
-            if _available_seats <= 0:
-                raise ValueError("Available seats must be greater than 0")
-
-            #TODO: check that doesn't have to post that at the same time
-
-            # Create a new Ride object with the provided details
-            new_ride = Rides(driver_id=_driver_id,
-                             departure_location=_departure_location,
-                             pickup_radius=_pickup_radius,
-                             destination=_destination,
-                             drop_radius=_drop_radius,
-                             departure_datetime=_departure_datetime,
-                             available_seats=_available_seats,
-                             notes=_notes
-                             )
-
-            # Save the new ride to the database
-            new_ride.save()
-
-            # Return success indicating the ride was posted successfully
-            return True
+            response = Response(success=True, message="Ride posted successfully", status_code=200,
+                                data=future_ride_post.to_response())
+            return response.to_tuple()
         except ValueError as ve:
             # Handle validation errors
-            print(f"Validation error: {str(ve)}")
-            return False
+            response = Response(success=False, message=f"Validation error: {str(ve)}", status_code=400)
+            return response.to_tuple()
         except Exception as e:
             # Handle other exceptions, log errors, etc.
-            print(f"Error posting future ride: {str(e)}")
-            return False
+            response = Response(success=False, message=f"Error posting future ride: {str(e)}", status_code=500)
+            return response.to_tuple()
 
     @staticmethod
     def get_ride_posts_by_user_id(user_id):
@@ -66,15 +60,19 @@ class DriverService:
         - user_id: int, the ID of the user whose ride posts to fetch
 
         Returns:
-        - ride_posts: list, a list of dictionaries containing ride post data
+        - response: tuple, a response object containing success status, message, and ride post data
         """
         try:
             ride_posts = Rides.query.filter_by(driver_id=user_id).all()
-            return [ride.to_dict() for ride in ride_posts]
+            ride_post_dicts = [ride.to_dict() for ride in ride_posts]
+            response = Response(success=True, message="Ride posts fetched successfully", status_code=200,
+                                data=ride_post_dicts)
+            return response.to_tuple()
         except Exception as e:
-            # Handle any exceptions and return an empty list in case of errors
+            # Handle any exceptions and log the error
             print(f"Error fetching ride posts: {str(e)}")
-            return []
+            response = Response(success=False, message="Error fetching ride posts", status_code=500)
+            return response.to_tuple()
 
     @staticmethod
     def get_future_ride_posts_by_user_id(user_id):
