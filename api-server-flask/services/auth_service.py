@@ -76,11 +76,20 @@ class AuthService:
 
     @staticmethod
     def getCode(_email):
+        """
+        check there is user with email like the parameter and send code to this email.
+
+        Parameters:
+        - _email - string that specify the email that we want to send the code to
+
+        Returns:
+        - success message or error in case that no user hase found or sending the email failed
+        """
         user_exists = Users.get_by_email(_email)
 
         if not user_exists:
             return {"success": False,
-                    "msg": "This email does not exist."}, 400
+                    "msg": "This email does not exist."}, 404
         try:
             code = random.randint(100000, 999999)
             verify = VerificationCodes(email=_email, code=code, date_send=datetime.now(pytz.timezone('Israel')))
@@ -88,22 +97,36 @@ class AuthService:
             send_verification_mail(_email, code)
         except Exception as e:
             return {"success": False,
-                    "msg": "Error in sending Email"}, 400
+                    "msg": "Error in sending Email"}, 503
         return {"success": True,
                 "msg": "code sent to " + str(_email)}, 200
 
     @staticmethod
     def enterCode(_email, _code):
         user_exists = Users.get_by_email(_email)
+        """
+        check if the code that sent to the email is correct
+
+        Parameters:
+        - _email - the last email that the user send a verification code to 
+        - _code - the verification code that the user entered
+
+        Returns:
+        - success if the code entered correctly in time else an error message
+        """
 
         if not user_exists:
             return {"success": False,
-                    "msg": "This email does not exist."}, 400
+                    "msg": "This email does not exist."}, 404
         try:
             VerificationCodes.verify_user(_email, _code)
         except Exception as e:
+            if len(e.args) == 1:
+                return {"success": False,
+                        "msg": "fail to verify the user"}, 400
+
             return {"success": False,
-                    "msg": str(e)}, 400
+                    "msg": str(e.args[0])}, int(e.args[1])
         return {"success": True,
                 "msg": "User verified"}, 200
 
@@ -161,10 +184,22 @@ class AuthService:
 
     @staticmethod
     def forget_password(verify_user, password, confirmPassword):
+        """
+        change the password of a user only if the system verified this user
+
+        Parameters:
+        - verify_user - the email of the verified user and the date that he was verified
+        - password - the password that the user want to change to
+        - confirmPassword - a confirmation of the password that the user entered
+
+        Returns:
+        - success if the user verified in time and the passwords valid and the same
+        - error and message if somthing else happened
+        """
         user_exists = Users.get_by_email(verify_user[0])
         if not user_exists:
             return {"success": False,
-                    "msg": "This email does not exist."}, 400
+                    "msg": "This email does not exist."}, 404
         if not time_left(verify_user[1], datetime.now(pytz.timezone('Israel'))):
             return {"success": False,
                     "msg": "Time has expired"}, 403

@@ -70,10 +70,12 @@ class Register(Resource):
 
 @auth_ns.route('/GetCode')
 class GetCode(Resource):
+    """
+       sending a verification code via email that the user has entered
+    """
 
     @auth_ns.expect(get_code_model, validate=True)
     def post(self):
-        session["Hello"] = "World"
         req_data = request.get_json()
         _email = req_data.get("email")
         resp = auth.getCode(_email)
@@ -84,6 +86,9 @@ class GetCode(Resource):
 
 @auth_ns.route('/EnterCode')
 class EnterCode(Resource):
+    """
+       validated that the code that the user entered is correct in the time limit (3 minutes)
+    """
     @auth_ns.expect(enter_code_model, validate=True)
     def post(self):
         print(session)
@@ -101,16 +106,19 @@ class EnterCode(Resource):
 
 @auth_ns.route('/ForgetPassword')
 class ForgetPassword(Resource):
+    """
+       allow the user to change his password. require a verification process neet to be 3 minutes after the verification
+    """
     @auth_ns.expect(forget_password_model, validate=True)
     def post(self):
         if "verify" not in session:
             return {"success": False,
-                    "msg": "Did not enter confirmation code"}, 400
+                    "msg": "Did not enter confirmation code"}, 401
         _email = session["email"]
         verify_user = session["verify"]
         if not _email == verify_user[0]:
             return {"success": False,
-                    "msg": "Not verified on last user"}, 400
+                    "msg": "Not verified on last user"}, 401
         req_data = request.get_json()
         password = req_data.get("password")
         confirmPassword = req_data.get("confirmPassword")
