@@ -25,6 +25,28 @@ class Rides(db.Model):
         db.session.add(self)
         db.session.commit()
 
+    def update_details(self, new_details):
+        """
+        Updates the ride details with new information.
+
+        Parameters:
+        - new_details: dict, a dictionary containing the updated details for the ride
+
+        Returns:
+        - success: bool, indicates whether the ride details update was successful
+        """
+        try:
+            for key, value in new_details.items():
+                if key == "departure_datetime":
+                    value = datetime.strptime(value, '%Y-%m-%dT%H:%M:%S.%fZ')
+                setattr(self, key, value)
+            self.save()
+            return True
+        except Exception as e:
+            print(f"Error updating ride details: {str(e)}")
+            db.session.rollback()
+            return False
+
     @classmethod
     def get_by_id(cls, id):
         return cls.query.get_or_404(id)

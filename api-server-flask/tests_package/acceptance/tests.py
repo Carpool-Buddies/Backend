@@ -2,7 +2,7 @@ import pytest
 import json
 
 from api import app
-
+from models import db
 
 VALID_EMAIL = "user@example.co.il"
 VALID_PASSWORD = "ValidPassword1!"
@@ -30,7 +30,6 @@ def client():
     with app.test_client() as client:
         yield client
 
-# TODO: Fixture to clean up the database after each test
 # @pytest.fixture(scope='function', autouse=True)
 # def clean_up_database():
 #     """
@@ -266,6 +265,24 @@ def test_GivenValidFutureRideData_thenPostRideSuccessfully(departure_location, p
     assert "Ride posted successfully" in data["msg"]
 
 @pytest.mark.parametrize("departure_location, pickup_radius, destination, drop_radius, departure_datetime, available_seats, notes", [
+    # Valid ride details
+    ("Main Street", 10, "Market Square", 10, "2025-06-15T15:00:00.000Z", 4, "Pick up near the cafe.")])
+def test_GivenValidFutureRideData_thenPostRideSuccessfully(departure_location, pickup_radius, destination, drop_radius, departure_datetime, available_seats, notes, client):
+    """
+    Tests /api/drivers/post-future-rides API with valid inputs to ensure that future rides are posted successfully.
+    """
+    register(client, VALID_EMAIL, VALID_PASSWORD, FIRST_NAME, LAST_NAME, VALID_PHONE_NUMBER, VALID_BIRTHDAY)
+    response = login(client, VALID_EMAIL, VALID_PASSWORD)
+    data = json.loads(response.data.decode())
+
+    response = post_future_rides(client, data["token"], departure_location, pickup_radius, destination, drop_radius, departure_datetime, available_seats, notes)
+
+    data = json.loads(response.data.decode())
+    assert response.status_code == SUCCESS_CODE
+    assert "Ride posted successfully" in data["msg"]
+
+
+@pytest.mark.parametrize("departure_location, pickup_radius, destination, drop_radius, departure_datetime, available_seats, notes", [
     # Invalid pickup radius (negative value)
     ("Main Street", -1, "Market Square", 5, "2024-05-12T20:50:33.432Z", 3, "No notes"),
     # Invalid drop radius (negative value)
@@ -294,6 +311,53 @@ def test_GivenInvalidFutureRideData_thenPost_returnAppropriateCodeAndMsg(departu
     assert response.status_code == BAD_REQUEST_CODE
     assert FUTURE_RIDES_INVALID_INPUT_MESSAGE in data["msg"]
 
+def test_update_ride_details(client):
+    # Register and login a user
+    register_response = register(client, VALID_EMAIL, VALID_PASSWORD, FIRST_NAME, LAST_NAME, VALID_PHONE_NUMBER, VALID_BIRTHDAY)
+    login_response = login(client, VALID_EMAIL, VALID_PASSWORD)
+    token = login_response.get_json()["token"]
+
+    # Post a future ride
+    post_response = post_future_rides(
+        client, token, "Location A", 5.0, "Location B", 5.0, "2024-06-15T15:00:00.000Z", 4, "No notes"
+    )
+    ride_id = post_response.get_json()["ride_id"]
+
+    # Update the ride details
+    new_details = {
+        "departure_location": "Updated Location A",
+        "pickup_radius": 10.0,
+        "destination": "Updated Location B",
+        "drop_radius": 10.0,
+        "departure_datetime": "2024-06-16T15:00:00.000Z",
+        "available_seats": 3,
+        "notes": "Updated notes"
+    }
+    update_response = update_ride_details(client, token, ride_id, new_details)
+    data = update_response.get_json()
+
+    assert update_response.status_code == SUCCESS_CODE
+    assert data["msg"] == "Ride details updated successfully"
+
+def test_get_ride_posts_by_user_id(client):
+    # Register and login a user
+    register_response = register(client, VALID_EMAIL, VALID_PASSWORD, FIRST_NAME, LAST_NAME, VALID_PHONE_NUMBER, VALID_BIRTHDAY)
+    login_response = login(client, VALID_EMAIL, VALID_PASSWORD)
+    login_response_data = json.loads(login_response.data.decode())
+    token = login_response_data["token"]
+    user_id = login_response_data["user"]["_id"]
+    # Post a future ride
+    post_response = post_future_rides(
+        client, token, "Location A", 5.0, "Location B", 5.0, "2024-06-15T15:00:00.000Z", 4, "No notes"
+    )
+
+    # Get ride posts by user ID
+    get_response = get_ride_posts_by_user_id(client, token, user_id)
+    data = get_response.get_json()
+
+    assert get_response.status_code == SUCCESS_CODE
+    assert isinstance(data, list)
+    assert len(data) > 0
 
 # ----------------------------------------------------------------------------------------------
 
@@ -349,6 +413,21 @@ def post_future_rides(client, token, departure_location, pickup_radius, destinat
                 "notes": notes
             }
         ),
+        headers={'Content-Type': 'application/json', 'accept': 'application/json', "Authorization": f"{token}"}
+    )
+    return response
+
+def update_ride_details(client, token, ride_id, new_details):
+    response = client.put(
+        f"/api/drivers/update-ride-details/{ride_id}",
+        data=json.dumps(new_details),
+        headers={'Content-Type': 'application/json', 'accept': 'application/json', "Authorization": f"{token}"}
+    )
+    return response
+
+def get_ride_posts_by_user_id(client, token, user_id):
+    response = client.get(
+        f"/api/drivers/{user_id}/rides",
         headers={'Content-Type': 'application/json', 'accept': 'application/json', "Authorization": f"{token}"}
     )
     return response
