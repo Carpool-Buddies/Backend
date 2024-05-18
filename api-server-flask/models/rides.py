@@ -7,7 +7,7 @@ from .join_ride_requests import JoinRideRequests
 class Rides(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     driver_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    status = db.Column(db.String(20), nullable=False)
+    status = db.Column(db.String(20), nullable=False, default='waiting')
     departure_location = db.Column(db.String(100), nullable=False)
     pickup_radius = db.Column(db.Float, nullable=False)
     destination = db.Column(db.String(100), nullable=False)
@@ -24,6 +24,28 @@ class Rides(db.Model):
     def save(self):
         db.session.add(self)
         db.session.commit()
+
+    def update_details(self, new_details):
+        """
+        Updates the ride details with new information.
+
+        Parameters:
+        - new_details: dict, a dictionary containing the updated details for the ride
+
+        Returns:
+        - success: bool, indicates whether the ride details update was successful
+        """
+        try:
+            for key, value in new_details.items():
+                if key == "departure_datetime":
+                    value = datetime.strptime(value, '%Y-%m-%dT%H:%M:%S.%fZ')
+                setattr(self, key, value)
+            self.save()
+            return True
+        except Exception as e:
+            print(f"Error updating ride details: {str(e)}")
+            db.session.rollback()
+            return False
 
     @classmethod
     def get_by_id(cls, id):

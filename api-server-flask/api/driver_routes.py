@@ -64,13 +64,9 @@ class PostFutureRides(Resource):
         _notes = req_data.get("notes")
 
         # Call the service method to post the future ride
-        success = driver_service.post_future_ride(current_user.id, _departure_location, _pickup_radius, _destination,
+        return driver_service.post_future_ride(current_user.id, _departure_location, _pickup_radius, _destination,
                                                   _drop_radius, _departure_datetime, _available_seats, _notes)
 
-        if success:
-            return {"success": True}, 200
-        else:
-            return {"error": "Failed to post future ride"}, 500
 
 @driver_ns.doc(security='JWT Bearer')
 @driver_ns.route('/<int:user_id>/rides')

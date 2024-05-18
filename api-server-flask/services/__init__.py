@@ -1,0 +1,3 @@
+from services.login_attempt_tracker import LoginAttemptTracker
+
+login_attempt_tracker = LoginAttemptTracker()
