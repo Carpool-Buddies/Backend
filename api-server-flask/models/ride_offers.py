@@ -1,4 +1,4 @@
-from datetime import datetime
+import datetime
 from . import db
 
 
@@ -11,7 +11,7 @@ class RideOffers(db.Model):
     drop_radius = db.Column(db.Float, nullable=False)
     departure_datetime = db.Column(db.DateTime, nullable=False)
     notes = db.Column(db.Text, nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.datetime.now())
 
     def __repr__(self):
         return f"RideOffer {self.id}"
