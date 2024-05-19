@@ -10,8 +10,11 @@ env__/
 .vscode/symbols.json
 api/db.sqlite3
 .idea/
+.idea/*
 .env
 
 .idea/*.iml
 .idea/misc.xml
 .idea/*
+.idea/api-server-flask.iml
+
