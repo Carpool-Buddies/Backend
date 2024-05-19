@@ -12,3 +12,8 @@ api/db.sqlite3
 .idea/
 .idea/*
 .env
+
+# Specific files from your image
+.idea/api-server-flask.iml
+.idea/misc.xml
+.idea/*
