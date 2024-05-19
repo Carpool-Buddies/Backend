@@ -66,7 +66,7 @@ class DriverService:
             ride_posts = Rides.query.filter_by(driver_id=user_id).all()
             ride_post_dicts = [ride.to_dict() for ride in ride_posts]
             response = Response(success=True, message="Ride posts fetched successfully", status_code=200,
-                                data=ride_post_dicts)
+                                data={"ride_posts": ride_post_dicts})
             return response.to_tuple()
         except Exception as e:
             # Handle any exceptions and log the error

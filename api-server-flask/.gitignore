@@ -10,3 +10,5 @@ env__/
 .vscode/symbols.json
 api/db.sqlite3
 .idea/
+.idea/*
+.env

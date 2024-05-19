@@ -53,6 +53,7 @@ class Rides(db.Model):
 
     def to_dict(self):
         ride_dict = {
+            'ride_id': self.id,
             '_driver_id': self.driver_id,
             '_departure_location': self.departure_location,
             '_pickup_radius': self.pickup_radius,
