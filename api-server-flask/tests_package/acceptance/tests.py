@@ -13,6 +13,7 @@ VALID_BIRTHDAY = "1990-01-01"
 
 SUCCESS_CODE = 200
 BAD_REQUEST_CODE = 400
+UNAUTHORIZED_CODE = 403
 USER_REGISTRATION_SUCCESS_MESSAGE = "User registered successfully"
 USER_REGISTRATION_INVALID_EMAIL_MESSAGE = "Invalid email format"
 USER_REGISTRATION_INVALID_PASSWORD_MESSAGE = "Password must contain at least one uppercase letter, one lowercase letter and one digit."
@@ -356,8 +357,26 @@ def test_get_ride_posts_by_user_id(client):
     data = get_response.get_json()
 
     assert get_response.status_code == SUCCESS_CODE
-    assert isinstance(data, list)
+    assert isinstance(data["ride_posts"], list)
     assert len(data) > 0
+
+def test_get_ride_posts_by_user_id(client):
+    # Register and login a user
+    register_response = register(client, VALID_EMAIL, VALID_PASSWORD, FIRST_NAME, LAST_NAME, VALID_PHONE_NUMBER, VALID_BIRTHDAY)
+    login_response = login(client, VALID_EMAIL, VALID_PASSWORD)
+    login_response_data = json.loads(login_response.data.decode())
+    token = login_response_data["token"]
+    user_id = login_response_data["user"]["_id"]
+    # Post a future ride
+    post_response = post_future_rides(
+        client, token, "Location A", 5.0, "Location B", 5.0, "2024-06-15T15:00:00.000Z", 4, "No notes"
+    )
+
+    # Get ride posts by user ID
+    get_response = get_ride_posts_by_user_id(client, token, user_id + 1)
+
+    assert get_response.status_code == UNAUTHORIZED_CODE
+
 
 # ----------------------------------------------------------------------------------------------
 
@@ -417,9 +436,9 @@ def post_future_rides(client, token, departure_location, pickup_radius, destinat
     )
     return response
 
-def update_ride_details(client, token, ride_id, new_details):
+def update_ride_details(client, token, driver_id, ride_id, new_details):
     response = client.put(
-        f"/api/drivers/update-ride-details/{ride_id}",
+        f"api/drivers/{driver_id}/rides/{ride_id}/update",
         data=json.dumps(new_details),
         headers={'Content-Type': 'application/json', 'accept': 'application/json', "Authorization": f"{token}"}
     )
