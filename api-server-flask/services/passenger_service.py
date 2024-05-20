@@ -1,4 +1,4 @@
-from models import RideOffers
+from models import RideOffers, Rides, JoinRideRequests
 from datetime import datetime
 
 
@@ -45,5 +45,14 @@ class PassengerService:
             return False
         except Exception as e:
             # Handle other exceptions, log errors, etc.
-            print(f"Error posting future ride: {str(e)}")
+            print(f"Error making ride offer: {str(e)}")
             return False
+
+    @staticmethod
+    def join_ride_request(passenger_id,ride_id):
+        ride = Rides.get_by_id(ride_id)
+        if ride.available_seats > 0:
+            join_request = JoinRideRequests(passenger_id = passenger_id,ride_id= ride_id)
+            join_request.save()
+            return True
+        return False

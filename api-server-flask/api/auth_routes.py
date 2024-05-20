@@ -91,7 +91,6 @@ class EnterCode(Resource):
     """
     @auth_ns.expect(enter_code_model, validate=True)
     def post(self):
-        print(session)
         req_data = request.get_json()
         if "email" not in session:
             return {"success": False,
