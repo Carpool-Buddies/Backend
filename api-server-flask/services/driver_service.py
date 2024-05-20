@@ -1,5 +1,5 @@
 from models import Rides, JoinRideRequests, db
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from services.future_ride_post import FutureRidePost
 from utils.response import Response
@@ -236,11 +236,112 @@ class DriverService:
         - ride_id: int, the ID of the ride for which to retrieve pending requests
 
         Returns:
-        - list of JoinRideRequests: The list of pending join requests for the ride
+        - response: tuple, a response object containing success status, message, and the list of pending join requests
         """
         try:
             pending_requests = JoinRideRequests.query.filter_by(ride_id=ride_id, status='pending').all()
-            return pending_requests
+            pending_requests_dicts = [request.to_dict() for request in pending_requests]
+            response = Response(success=True, message="Pending join requests retrieved successfully", status_code=200,
+                                data=pending_requests_dicts)
+            return response.to_tuple()
         except Exception as e:
             print(f"Error retrieving pending requests: {str(e)}")
-            return []
+            response = Response(success=False, message="Error retrieving pending requests", status_code=500)
+            return response.to_tuple()
+
+    @staticmethod
+    def start_ride(current_user, ride_id):
+        """
+        Starts a ride if the departure datetime is close to the current time and updates the ride status to 'InProgress'.
+
+        Parameters:
+        - current_user: User, the user starting the ride
+        - ride_id: int, the ID of the ride to be started
+
+        Returns:
+        - response: tuple, a response object containing success status and message
+        """
+
+        try:
+            # Start a transaction
+            with db.session.begin(subtransactions=True):
+                # Retrieve the ride
+                ride = Rides.get_by_id(ride_id)
+
+                # Check if the user is the driver of the ride
+                if ride.driver_id != current_user.id:
+                    raise ValueError("Unauthorized: only the driver can start the ride")
+
+                # Check if the departure time is close to the current time (within 30 minutes)
+                now = datetime.utcnow()
+                if not (ride.departure_datetime - timedelta(minutes=30) <= now <= ride.departure_datetime + timedelta(
+                        minutes=30)):
+                    raise ValueError("Cannot start the ride: it's not within the allowed time window")
+
+                # Update the ride status to 'InProgress'
+                if not ride.start_ride():
+                    raise ValueError("Error starting ride")
+
+                # TODO: Send notification to all passengers subscribed to the ride
+                # for passenger in ride.passengers:
+                #     notify_passenger(passenger.id, 'The ride has started')
+
+            response = Response(success=True, message="Ride started successfully", status_code=200)
+            return response.to_tuple()
+
+        except ValueError as ve:
+            response = Response(success=False, message=str(ve), status_code=400)
+            return response.to_tuple()
+        except SQLAlchemyError as e:
+            print(f"Error starting ride: {str(e)}")
+            db.session.rollback()
+            response = Response(success=False, message="Error starting ride", status_code=500)
+            return response.to_tuple()
+
+
+    @staticmethod
+    def end_ride(current_user, ride_id):
+        """
+        Ends a ride and updates the ride status to 'Completed'.
+
+        Parameters:
+        - current_user: User, the user ending the ride
+        - ride_id: int, the ID of the ride to be ended
+
+        Returns:
+        - response: tuple, a response object containing success status and message
+        """
+
+        try:
+            # Start a transaction
+            with db.session.begin(subtransactions=True):
+                # Retrieve the ride
+                ride = Rides.get_by_id(ride_id)
+
+                # Check if the user is the driver of the ride
+                if ride.driver_id != current_user.id:
+                    raise ValueError("Unauthorized: only the driver can end the ride")
+
+                # Check if the ride is in progress
+                if ride.status != 'InProgress':
+                    raise ValueError("Cannot end the ride: it is not currently in progress")
+
+                # Update the ride status to 'Completed'
+                if not ride.end_ride():
+                    raise ValueError("Error ending ride")
+
+                # TODO: Send notification to all passengers subscribed to the ride
+                # for passenger in ride.passengers:
+                #     notify_passenger(passenger.id, 'The ride has ended')
+
+            response = Response(success=True, message="Ride ended successfully", status_code=200)
+            return response.to_tuple()
+
+        except ValueError as ve:
+            response = Response(success=False, message=str(ve), status_code=400)
+            return response.to_tuple()
+        except SQLAlchemyError as e:
+            print(f"Error ending ride: {str(e)}")
+            db.session.rollback()
+            response = Response(success=False, message="Error ending ride", status_code=500)
+            return response.to_tuple()

@@ -131,18 +131,15 @@ class ManagePassengerRequests(Resource):
         try:
             # Check if the current user is authorized to view the ride posts of the specified user
             if current_user.id != user_id:
-                return {"message": "Unauthorized access to user's ride posts"}, 403
+                response = Response(success=False, message="Unauthorized access to user's ride posts", status_code=403)
+                return response.to_tuple()
 
             # Retrieve pending join requests using the service
-            pending_requests = DriverService.get_pending_join_requests_for_ride(ride_id)
-
-            # Format the pending requests data
-            pending_requests_data = [request.to_dict() for request in pending_requests]
-
-            return {"pending_requests": pending_requests_data}, 200
+            return DriverService.get_pending_join_requests_for_ride(ride_id)
 
         except Exception as e:
-            return {"error": str(e)}, 500
+            response = Response(success=False, message=str(e), status_code=500)
+            return response.to_tuple()
 
     @driver_ns.expect(ride_request_model)
     @token_required
@@ -151,9 +148,10 @@ class ManagePassengerRequests(Resource):
         Manages passenger join ride requests for the selected ride.
         """
         try:
-            # Check if the current user is authorized to view the ride posts of the specified user
+            # Check if the current user is authorized to manage the ride posts of the specified user
             if current_user.id != user_id:
-                return {"message": "Unauthorized access to user's ride posts"}, 403
+                response = Response(success=False, message="Unauthorized access to user's ride posts", status_code=403)
+                return response.to_tuple()
 
             req_data = request.get_json()
 
@@ -162,15 +160,11 @@ class ManagePassengerRequests(Resource):
             status_update = req_data.get("status_update")
 
             # Manage ride request using DriverService
-            success = DriverService.manage_ride_request(ride_id, request_id, status_update)
-
-            if success:
-                return {"success": True}, 200
-            else:
-                return {"error": "Failed to manage ride request"}, 400
+            return DriverService.manage_ride_request(current_user, ride_id, request_id, status_update)
 
         except Exception as e:
-            return {"error": str(e)}, 500
+            response = Response(success=False, message=str(e), status_code=500)
+            return response.to_tuple()
 
 @driver_ns.doc(security='JWT Bearer')
 @driver_ns.route('/<int:user_id>/future-rides')
@@ -188,3 +182,53 @@ class ManageUserFutureRides(Resource):
 
         # Fetch the future ride posts associated with the specified user ID using DriverService
         return DriverService.get_future_ride_posts_by_user_id(user_id)
+
+@driver_ns.doc(security='JWT Bearer')
+@driver_ns.route('/<int:user_id>/rides/<int:ride_id>/start')
+class StartRide(Resource):
+    """
+    Allows drivers to start a ride.
+    """
+
+    @token_required
+    def post(self, current_user, user_id, ride_id):
+        """
+        Starts the ride if the departure datetime is close to the current time.
+        """
+        try:
+            # Check if the current user is authorized to start the ride
+            if current_user.id != user_id:
+                response = Response(success=False, message="Unauthorized access to start the ride", status_code=403)
+                return response.to_tuple()
+
+            # Start the ride using DriverService
+            return DriverService.start_ride(current_user, ride_id)
+
+        except Exception as e:
+            response = Response(success=False, message=str(e), status_code=500)
+            return response.to_tuple()
+
+@driver_ns.doc(security='JWT Bearer')
+@driver_ns.route('/<int:user_id>/rides/<int:ride_id>/end')
+class EndRide(Resource):
+    """
+    Allows drivers to end a ride.
+    """
+
+    @token_required
+    def post(self, current_user, user_id, ride_id):
+        """
+        Ends the ride if it is currently in progress.
+        """
+        try:
+            # Check if the current user is authorized to end the ride
+            if current_user.id != user_id:
+                response = Response(success=False, message="Unauthorized access to end the ride", status_code=403)
+                return response.to_tuple()
+
+            # End the ride using DriverService
+            return DriverService.end_ride(current_user, ride_id)
+
+        except Exception as e:
+            response = Response(success=False, message=str(e), status_code=500)
+            return response.to_tuple()
