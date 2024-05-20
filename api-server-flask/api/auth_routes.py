@@ -91,7 +91,6 @@ class EnterCode(Resource):
     """
     @auth_ns.expect(enter_code_model, validate=True)
     def post(self):
-        print(session)
         req_data = request.get_json()
         if "email" not in session:
             return {"success": False,
@@ -184,3 +183,20 @@ class Home(Resource):
     @token_required
     def get(self, current_user):
         return {"success": True, "message": "User is logged in.", "user": current_user.toJSON()}, 200
+
+
+@auth_ns.doc(security='JWT Bearer')
+@auth_ns.route('/userDetails')
+class UserDetails(Resource):
+    @token_required
+    def get(self, current_user):
+        print(current_user)
+        user_id = current_user.id
+        email = current_user.email
+        first_name = current_user.first_name
+        last_name = current_user.last_name
+        return {"success": True,
+                "email": email,
+                "id": user_id,
+                "first_name": first_name,
+                "last_name": last_name}, 200

@@ -1,3 +1,5 @@
+import pytz
+
 from . import db
 from datetime import datetime
 
@@ -7,7 +9,7 @@ class JoinRideRequests(db.Model):
     passenger_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     status = db.Column(db.String(20), nullable=False, default='pending')
     requested_seats = db.Column(db.Integer, nullable=False, default=1)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.now(pytz.timezone('Israel')))
 
     def __repr__(self):
         return f"JoinRideRequest {self.id}"
@@ -29,3 +31,6 @@ class JoinRideRequests(db.Model):
             "requested_seats": self.requested_seats,
             "created_at": self.created_at.isoformat()
         }
+
+    def to_json(self):
+        return self.to_dict()

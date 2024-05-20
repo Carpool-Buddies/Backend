@@ -17,6 +17,7 @@ import jwt
 
 from models import Users, JWTTokenBlocklist
 from models.verification_codes import VerificationCodes, time_left
+import os
 
 
 def validate_password(password):
@@ -43,9 +44,10 @@ def send_verification_mail(_receiver, _code):
     msg['to'] = _receiver
     server = smtplib.SMTP("smtp.gmail.com", 587)
     server.starttls()
-    server.login(email, "yire zqbh pgnj xygt")
+    server.login(email, os.environ.get("email_server_password"))
     server.send_message(msg)
     server.quit()
+
 
 MAX_ATTEMPTS = 5
 
