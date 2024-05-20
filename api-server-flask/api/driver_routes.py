@@ -2,6 +2,7 @@ from flask import request
 from flask_restx import Resource, Namespace, fields
 
 from services.driver_service import DriverService
+from utils.response import Response
 
 from .token_decorators import token_required
 
@@ -79,7 +80,8 @@ class ManageUserRidePosts(Resource):
     def get(self, current_user, user_id):
         # Check if the current user is authorized to view the ride posts of the specified user
         if current_user.id != user_id:
-            return {"message": "Unauthorized access to user's ride posts"}, 403
+            response = Response(success=False, message="Unauthorized access to user's ride posts", status_code=403)
+            return response.to_tuple()
 
         # Fetch the ride posts associated with the specified user ID using DriverService
         return DriverService.get_ride_posts_by_user_id(user_id)
@@ -169,3 +171,20 @@ class ManagePassengerRequests(Resource):
 
         except Exception as e:
             return {"error": str(e)}, 500
+
+@driver_ns.doc(security='JWT Bearer')
+@driver_ns.route('/<int:user_id>/future-rides')
+class ManageUserFutureRides(Resource):
+    """
+    Allows users to manage their future ride posts
+    """
+
+    @token_required
+    def get(self, current_user, user_id):
+        # Check if the current user is authorized to view the future ride posts of the specified user
+        if current_user.id != user_id:
+            response = Response(success=False, message="Unauthorized access to user's future ride posts", status_code=403)
+            return response.to_tuple()
+
+        # Fetch the future ride posts associated with the specified user ID using DriverService
+        return DriverService.get_future_ride_posts_by_user_id(user_id)

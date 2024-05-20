@@ -1,9 +1,10 @@
-from models import Rides, JoinRideRequests
+from models import Rides, JoinRideRequests, db
 from datetime import datetime
 
 from services.future_ride_post import FutureRidePost
 from utils.response import Response
 
+from sqlalchemy.exc import SQLAlchemyError
 
 class DriverService:
 
@@ -74,6 +75,31 @@ class DriverService:
             response = Response(success=False, message="Error fetching ride posts", status_code=500)
             return response.to_tuple()
 
+    @staticmethod
+    def get_future_ride_posts_by_user_id(user_id):
+        """
+        Fetches future ride posts associated with a specific user ID.
+
+        Parameters:
+        - user_id: int, the ID of the user whose future ride posts to fetch
+
+        Returns:
+        - response: tuple, a response object containing success status, message, and future ride post data
+        """
+        try:
+            # Filter rides that are in the future
+            future_rides = Rides.query.filter(Rides.driver_id == user_id,
+                                              Rides.departure_datetime > datetime.utcnow()).all()
+            future_ride_dicts = [ride.to_dict() for ride in future_rides]
+            response = Response(success=True, message="Future ride posts fetched successfully", status_code=200,
+                                data={"future_rides": future_ride_dicts})
+            return response.to_tuple()
+        except Exception as e:
+            # Handle any exceptions and log the error
+            print(f"Error fetching future ride posts: {str(e)}")
+            response = Response(success=False, message="Error fetching future ride posts", status_code=500)
+            return response.to_tuple()
+
     def update_ride_details(ride_id, new_details):
         """
         Updates details for a specific ride post with restrictions.
@@ -126,54 +152,80 @@ class DriverService:
             response = Response(success=False, message="Error updating ride details", status_code=500)
             return response.to_tuple()
 
-
     @staticmethod
-    def manage_ride_request(ride_id, request_id, status_update):
+    def manage_ride_request(current_user, ride_id, request_id, status_update):
         """
         Manages passenger ride requests for a specific ride.
 
         Parameters:
+        - current_user: User, the user making the request
         - ride_id: int, the ID of the ride for which the request is being managed
         - request_id: int, the ID of the ride request being managed
         - status_update: str, the status update ('accept' or 'reject')
 
         Returns:
-        - success: bool, indicates whether the request management was successful
+        - response: tuple, a response object containing success status and message
         """
+
         try:
-            # Retrieve the ride
-            ride = Rides.query.get_or_404(ride_id)
+            # Start a transaction
+            with db.session.begin(subtransactions=True):
+                # Retrieve the ride
+                ride = Rides.query.get_or_404(ride_id)
 
-            # Retrieve the ride request
-            ride_request = JoinRideRequests.query.get_or_404(request_id)
+                # Check if the user is the driver of the ride
+                if ride.driver_id == current_user.id:
+                    raise ValueError("Cannot manage ride request: the driver cannot accept or reject their own request")
 
-            # Handle the status update (accept/reject) for the ride request
-            if status_update == 'accept':
-                # Update the status of the ride request to accepted
-                ride_request.status = 'accepted'
+                # Check if the ride is in a waiting state and the departure time has not passed
+                if ride.status != 'waiting':
+                    raise ValueError("Cannot manage ride request: ride is not in a waiting state")
+                if ride.departure_datetime <= datetime.utcnow():
+                    raise ValueError("Cannot manage ride request: ride's departure time has passed")
 
-                # Update the number of confirmed passengers for the ride
-                ride.confirmed_passengers += 1
+                # Retrieve the ride request
+                ride_request = JoinRideRequests.query.get_or_404(request_id)
 
-                # Notify the passenger about the acceptance
-                # TODO: notify_passenger(ride_request.passenger_id, 'accepted')
+                # Check if there are available seats for the ride request
+                if ride.confirmed_passengers + ride_request.requested_seats > ride.available_seats and status_update == 'accept':
+                    raise ValueError("Cannot accept ride request: no available seats")
 
-            elif status_update == 'reject':
-                # Update the status of the ride request to rejected
-                ride_request.status = 'rejected'
+                # Handle the status update (accept/reject) for the ride request
+                if status_update == 'accept':
+                    # Update the status of the ride request to accepted
+                    ride_request.status = 'accepted'
 
-                # Notify the passenger about the rejection
-                # TODO: notify_passenger(ride_request.passenger_id, 'rejected')
+                    # Update the number of confirmed passengers for the ride
+                    ride.confirmed_passengers += ride_request.requested_seats
 
-            # Save changes to the database
-            ride.save()
-            ride_request.save()
+                    # TODO: Notify the passenger about the acceptance
+                    # notify_passenger(ride_request.passenger_id, 'accepted')
 
-            return True
+                elif status_update == 'reject':
+                    # Update the status of the ride request to rejected
+                    ride_request.status = 'rejected'
 
-        except Exception as e:
+                    # TODO: Notify the passenger about the rejection
+                    # notify_passenger(ride_request.passenger_id, 'rejected')
+
+                else:
+                    raise ValueError("Invalid status update: must be 'accept' or 'reject'")
+
+                # Save changes to the database
+                ride.save()
+                ride_request.save()
+
+            response = Response(success=True, message="Ride request managed successfully", status_code=200)
+            return response.to_tuple()
+
+        except ValueError as ve:
+            response = Response(success=False, message=str(ve), status_code=400)
+            return response.to_tuple()
+        except SQLAlchemyError as e:
             print(f"Error managing ride request: {str(e)}")
-            return False
+            db.session.rollback()
+            response = Response(success=False, message="Error managing ride request", status_code=500)
+            return response.to_tuple()
 
     @staticmethod
     def get_pending_join_requests_for_ride(ride_id):
