@@ -82,9 +82,8 @@ class ManageUserRidePosts(Resource):
             return {"message": "Unauthorized access to user's ride posts"}, 403
 
         # Fetch the ride posts associated with the specified user ID using DriverService
-        ride_posts = DriverService.get_ride_posts_by_user_id(user_id)
+        return DriverService.get_ride_posts_by_user_id(user_id)
 
-        return {"ride_posts": ride_posts}, 200
 
 @driver_ns.doc(security='JWT Bearer')
 @driver_ns.route('/<int:user_id>/rides/<int:ride_id>/update')

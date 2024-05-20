@@ -13,6 +13,7 @@ VALID_BIRTHDAY = "1990-01-01"
 
 SUCCESS_CODE = 200
 BAD_REQUEST_CODE = 400
+UNAUTHORIZED_CODE = 403
 USER_REGISTRATION_SUCCESS_MESSAGE = "User registered successfully"
 USER_REGISTRATION_INVALID_EMAIL_MESSAGE = "Invalid email format"
 USER_REGISTRATION_INVALID_PASSWORD_MESSAGE = "Password must contain at least one uppercase letter, one lowercase letter and one digit."
@@ -389,7 +390,7 @@ def test_get_ride_posts_by_user_id(client):
     data = get_response.get_json()
 
     assert get_response.status_code == SUCCESS_CODE
-    assert isinstance(data, list)
+    assert isinstance(data["ride_posts"], list)
     assert len(data) > 0
 
 
@@ -455,10 +456,9 @@ def post_future_rides(client, token, departure_location, pickup_radius, destinat
     )
     return response
 
-
-def update_ride_details(client, token, ride_id, new_details):
+def update_ride_details(client, token, driver_id, ride_id, new_details):
     response = client.put(
-        f"/api/drivers/update-ride-details/{ride_id}",
+        f"api/drivers/{driver_id}/rides/{ride_id}/update",
         data=json.dumps(new_details),
         headers={'Content-Type': 'application/json', 'accept': 'application/json', "Authorization": f"{token}"}
     )
