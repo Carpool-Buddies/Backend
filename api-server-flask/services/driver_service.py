@@ -22,8 +22,10 @@ class DriverService:
         - success: bool, indicates whether the ride posting was successful
         """
         try:
+            # Convert datetime string to datetime object
+            _departure_date_time_obj = datetime.strptime(_departure_datetime, '%Y-%m-%dT%H:%M:%S.%fZ')
             # Ensure departure_datetime is in the future
-            if _departure_datetime <= datetime.now():
+            if _departure_date_time_obj <= datetime.now():
                 raise ValueError("Departure date must be in the future")
 
             # Ensure available_seats is greater than 0
