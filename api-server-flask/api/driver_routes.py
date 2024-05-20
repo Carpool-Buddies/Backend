@@ -161,7 +161,7 @@ class ManagePassengerRequests(Resource):
             status_update = req_data.get("status_update")
 
             # Manage ride request using DriverService
-            success = DriverService.manage_join_ride_request(ride_id, request_id, status_update)
+            success = DriverService.manage_ride_request(ride_id, request_id, status_update)
 
             if success:
                 return {"success": True}, 200
