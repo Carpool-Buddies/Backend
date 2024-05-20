@@ -71,20 +71,22 @@ class GetRides(Resource):
     """
     get the future rides according to date and location
     """
-
+    @token_required
     @passenger_ns.expect(passenger_get_rides, validate=True)
-    def put(self, user_id):
+    def put(self,current_user, user_id):
+        if current_user.id != user_id:
+            return {"message": "Unauthorized access to user's ride posts"}, 403
         req_data = request.get_json()
         date = req_data.get("date")
-
-        return {"ride_posts": date}, 200
+        resp = passenger_service.get_rides(date)
+        return {"ride_posts": resp}, 200
 
 
 @passenger_ns.doc(security='JWT Bearer')
 @passenger_ns.route('/<int:user_id>/rides/join')
 class join_ride_request(Resource):
     """
-    get the future rides according to date and location
+    ask for confirmation to join a ride
     """
 
     @token_required

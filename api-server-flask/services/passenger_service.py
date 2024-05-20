@@ -1,5 +1,8 @@
+import pytz
+from sqlalchemy import or_
+
 from models import RideOffers, Rides, JoinRideRequests
-from datetime import datetime
+from datetime import datetime,timedelta
 
 
 class PassengerService:
@@ -22,7 +25,7 @@ class PassengerService:
         """
         try:
             # Ensure departure_datetime is in the future
-            if _departure_datetime <= datetime.now():
+            if _departure_datetime <= datetime.now(pytz.timezone('Israel')):
                 raise ValueError("Departure date must be in the future")
 
             # Create a new Ride object with the provided details
@@ -56,3 +59,16 @@ class PassengerService:
             join_request.save()
             return True
         return False
+
+    @staticmethod
+    def get_rides(date):
+        date.replace(tzinfo=None)
+        window_start = date - timedelta(minutes=30)
+        window_end = date + timedelta(minutes=30)
+        now = datetime.now(pytz.timezone('Israel')).replace(tzinfo=None)
+        return Rides.query.filter(
+            Rides.departure_datetime > now,
+            Rides.departure_datetime.between(window_start, window_end),
+            Rides.available_seats > 1,
+            Rides.status == 'waiting'
+        ).all()
