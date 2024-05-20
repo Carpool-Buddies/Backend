@@ -28,3 +28,4 @@ DEFAULT_NOTES = "No notes"
 
 
 RIDE_POSTED_SUCCESSFULLY = "Ride posted successfully"
+DEPARTURE_DATETIME_KEY = "departure_datetime"

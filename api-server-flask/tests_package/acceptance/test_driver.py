@@ -50,15 +50,27 @@ def driver_post_future_rides(
     )
     return response
 
-def get_ride_posts_by_user_id(client, token, user_id):
+def driver_get_ride_posts_by_user_id(client, token, user_id):
     response = client.get(
         f"/api/drivers/{user_id}/rides",
         headers={'Content-Type': 'application/json', 'accept': 'application/json', "Authorization": f"{token}"}
     )
     return response
 
+def get_ride_posts(client, token, user_id):
+    get_response = driver_get_ride_posts_by_user_id(client, token, user_id)
+    ride_posts = get_response.get_json()["ride_posts"]
+    return ride_posts
+
+def login(client):
+    login_response = login_user(client)
+    login_response_data = json.loads(login_response.data.decode())
+    token = login_response_data["token"]
+    user_id = login_response_data["user"]["_id"]
+    return token, user_id
+
 # -----------------------------------------------------------
-#                  Driver post future ride
+#                 Driver - Post future ride
 # -----------------------------------------------------------
 @pytest.mark.parametrize("departure_location, pickup_radius, destination, drop_radius, departure_datetime, available_seats, notes", [
     # Valid ride details
@@ -110,3 +122,39 @@ def test_GivenInvalidFutureRideData_thenPost_returnAppropriateCodeAndMsg(departu
     data = json.loads(response.data.decode())
     assert response.status_code == BAD_REQUEST_CODE
     assert FUTURE_RIDES_INVALID_INPUT_MESSAGE in data["msg"]
+
+# -----------------------------------------------------------
+#                  Driver - Get post ride
+# -----------------------------------------------------------
+def test_GivenExistsRidePost_WhenGetRidePost_ThanGetAppropiateResponse(client):
+    register_user(client)
+    token, user_id = login(client)
+    pre_post_ride = len(get_ride_posts(client, token, user_id))
+    # Post a future ride
+    driver_post_future_rides(client, token)
+    post_post_ride = len(get_ride_posts(client, token, user_id))
+    assert post_post_ride == pre_post_ride + 1
+
+def test_GivenInvalidUserID_WhenGetRidePost_ThanFailAndGetAppropiateResponse(client):
+    register_user(client)
+    token, user_id = login(client)
+    # Post a future ride
+    driver_post_future_rides(client, token)
+    # Get ride posts
+    get_response = driver_get_ride_posts_by_user_id(client, token, user_id + 1)
+    assert get_response.status_code == UNAUTHORIZED_CODE
+
+# -----------------------------------------------------------
+#                  Driver - Update ride post
+# -----------------------------------------------------------
+# TODO
+
+# -----------------------------------------------------------
+#               Driver - Get join ride request
+# -----------------------------------------------------------
+# TODO
+
+# -----------------------------------------------------------
+#               Driver - Manage join ride request
+# -----------------------------------------------------------
+# TODO
