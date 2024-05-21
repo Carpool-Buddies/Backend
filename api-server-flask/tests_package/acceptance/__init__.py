@@ -1,11 +1,12 @@
 import pytest
 
-from api import app
+# Optional: Setup code for the test package
+print("Setting up acceptance tests package")
 
-# TODO: Try fix that
-@pytest.fixture(scope="session")
-def client():
-    # app = create_app()
-    # configure_database(app)
-    with app.test_client() as client:
-        yield client
+# You can also import your test modules here if needed
+# from .test_authentication import *
+# from .test_rides import *
+
+# Optional: Running the tests programmatically
+# This will automatically run all tests when this package is imported
+# pytest.main(["-v", "--tb=short", "acceptance_tests/"])

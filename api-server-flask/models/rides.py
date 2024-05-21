@@ -47,6 +47,32 @@ class Rides(db.Model):
             db.session.rollback()
             return False
 
+    def start_ride(self):
+        """
+        Starts the ride by setting the status to 'InProgress'.
+        """
+        try:
+            self.status = 'InProgress'
+            self.save()
+        except Exception as e:
+            print(f"Error starting ride: {str(e)}")
+            db.session.rollback()
+            return False
+        return True
+
+    def end_ride(self):
+        """
+        Ends the ride by setting the status to 'Completed'.
+        """
+        try:
+            self.status = 'Completed'
+            self.save()
+        except Exception as e:
+            print(f"Error ending ride: {str(e)}")
+            db.session.rollback()
+            return False
+        return True
+
     @classmethod
     def get_by_id(cls, id):
         return cls.query.get_or_404(id)
@@ -70,6 +96,8 @@ class Rides(db.Model):
     def to_json(self):
         return self.to_dict()
 
+
+    # TODO: Issues-18
     def accept_ride_request(self, request_id):
         """
         Accepts a ride request for this ride.
