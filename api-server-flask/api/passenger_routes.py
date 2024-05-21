@@ -23,14 +23,29 @@ passenger_make_ride_offer = passenger_ns.model('PassengerMakeRideOfferModel',
                                                 "departure_datetime": fields.DateTime(required=True),
                                                 "notes": fields.String(required=False)
                                                 })
+
 passenger_get_rides = passenger_ns.model('PassengerGetRides', {
     'date': fields.DateTime(required=True)
 })
 
-passenger_join_ride_request = passenger_ns.model('JoinRideRequest',
+passenger_join_ride_request1 = passenger_ns.model('JoinRideRequest',
                                                  {
                                                      "ride_id": fields.Integer(required=True)
                                                  })
+
+passenger_join_ride_request = passenger_ns.model('JoinRideRequest', {
+    "ride_id": fields.Integer(required=True),
+    "requested_seats": fields.Integer(required=True)
+})
+
+passenger_search_rides = passenger_ns.model('SearchRides', {
+    "departure_location": fields.String(required=False),
+    "pickup_radius": fields.Float(required=False),
+    "destination": fields.String(required=False),
+    "drop_radius": fields.Float(required=False),
+    "departure_date": fields.Date(required=False),
+    "available_seats": fields.Integer(required=False)
+})
 
 """
     Flask-Restx routes
@@ -88,7 +103,7 @@ class join_ride_request(Resource):
     """
 
     @token_required
-    @passenger_ns.expect(passenger_join_ride_request, validate=True)
+    @passenger_ns.expect(passenger_join_ride_request1, validate=True)
     def put(self, current_user, user_id):
         try:
             # Check if the current user is authorized to view the ride posts of the specified user
@@ -107,3 +122,42 @@ class join_ride_request(Resource):
 
         except Exception as e:
             return {"error": str(e)}, 500
+
+# Routes
+@passenger_ns.route('/join-ride')
+class JoinRide(Resource):
+    """
+    Allows passengers to join a ride.
+    """
+
+    @passenger_ns.expect(passenger_join_ride_request, validate=True)
+    @token_required
+    def post(self, current_user):
+        req_data = request.get_json()
+        ride_id = req_data.get("ride_id")
+        requested_seats = req_data.get("requested_seats")
+
+        # Join ride using PassengerService
+        response = PassengerService.join_ride_request(current_user.id, ride_id, requested_seats)
+        return response.to_tuple()
+
+
+@passenger_ns.route('/search-rides')
+class SearchRides(Resource):
+    """
+    Allows passengers to search for rides.
+    """
+
+    @passenger_ns.expect(passenger_search_rides, validate=True)
+    def post(self):
+        req_data = request.get_json()
+        departure_location = req_data.get("departure_location")
+        pickup_radius = req_data.get("pickup_radius")
+        destination = req_data.get("destination")
+        drop_radius = req_data.get("drop_radius")
+        departure_date = req_data.get("departure_date")
+        available_seats = req_data.get("available_seats")
+
+        # Search rides using PassengerService
+        response = PassengerService.search_rides(departure_location, pickup_radius, destination, drop_radius, departure_date, available_seats)
+        return response.to_tuple()
