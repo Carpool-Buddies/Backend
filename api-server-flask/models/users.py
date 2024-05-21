@@ -16,7 +16,7 @@ class Users(db.Model):
     birthday = db.Column(db.Date, nullable=False)
     jwt_auth_active = db.Column(db.Boolean())
     approved = db.Column(db.Boolean())
-    date_joined = db.Column(db.DateTime(), default=datetime.utcnow)
+    date_joined = db.Column(db.DateTime(), default=datetime.now())
 
     def __repr__(self):
         return f"User {self.email}"

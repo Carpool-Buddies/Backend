@@ -16,7 +16,7 @@ class Rides(db.Model):
     available_seats = db.Column(db.Integer, nullable=False)
     confirmed_passengers = db.Column(db.Integer, nullable=False, default=0)
     notes = db.Column(db.Text, nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.now())
 
     def __repr__(self):
         return f"Ride {self.id}"
