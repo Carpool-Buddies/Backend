@@ -25,7 +25,7 @@ class PassengerService:
         """
         try:
             # Ensure departure_datetime is in the future
-            if _departure_datetime <= datetime.now(pytz.timezone('Israel')):
+            if _departure_datetime <= datetime.now():
                 raise ValueError("Departure date must be in the future")
 
             # Create a new Ride object with the provided details
@@ -65,7 +65,7 @@ class PassengerService:
         date.replace(tzinfo=None)
         window_start = date - timedelta(minutes=30)
         window_end = date + timedelta(minutes=30)
-        now = datetime.now(pytz.timezone('Israel')).replace(tzinfo=None)
+        now = datetime.now()
         return Rides.query.filter(
             Rides.departure_datetime > now,
             Rides.departure_datetime.between(window_start, window_end),

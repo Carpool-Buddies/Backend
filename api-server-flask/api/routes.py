@@ -76,7 +76,7 @@ class GoogleLogin(Resource):
                 return {"success": False, "message": str(e)}, 500
 
         # Generate JWT token
-        token = jwt.encode({"username": user.username, 'exp': datetime.utcnow() + timedelta(minutes=30)},
+        token = jwt.encode({"username": user.username, 'exp': datetime.now() + timedelta(minutes=30)},
                            BaseConfig.SECRET_KEY)
         user.set_jwt_auth_active(True)
         user.save()

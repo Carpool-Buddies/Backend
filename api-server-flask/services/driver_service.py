@@ -90,7 +90,7 @@ class DriverService:
             ride = Rides.get_by_id(ride_id)
 
             # Check if the departure_datetime has passed
-            if ride.departure_datetime <= datetime.utcnow():
+            if ride.departure_datetime <= datetime.now():
                 raise ValueError("Cannot update ride details after the departure time has passed")
 
             # Prepare new departure datetime for validation
