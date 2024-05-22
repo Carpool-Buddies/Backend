@@ -1,8 +1,6 @@
-from specifications import *
-from datetime import datetime
 from models import RideOffers, Rides, JoinRideRequests
+from datetime import datetime, timedelta
 from utils.response import Response
-
 
 class PassengerService:
     @staticmethod
@@ -51,13 +49,17 @@ class PassengerService:
             return False
 
     @staticmethod
-    def join_ride_request(passenger_id,ride_id):
-        ride = Rides.get_by_id(ride_id)
-        if ride.available_seats > 0:
-            join_request = JoinRideRequests(passenger_id = passenger_id,ride_id= ride_id)
-            join_request.save()
-            return True
-        return False
+    def get_rides(date):
+        date.replace(tzinfo=None)
+        window_start = date - timedelta(minutes=30)
+        window_end = date + timedelta(minutes=30)
+        now = datetime.now()
+        return Rides.query.filter(
+            Rides.departure_datetime > now,
+            Rides.departure_datetime.between(window_start, window_end),
+            Rides.available_seats > 1,
+            Rides.status == 'waiting'
+        ).all()
 
     @staticmethod
     def join_ride_request(passenger_id, ride_id, requested_seats):

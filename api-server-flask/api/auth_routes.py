@@ -99,7 +99,7 @@ class EnterCode(Resource):
         _code = req_data.get("code")
         resp = auth.enterCode(_email, _code)
         if resp[0]['success']:
-            session["verify"] = (_email, datetime.now(pytz.timezone('Israel')))
+            session["verify"] = (_email, datetime.now())
         return resp
 
 

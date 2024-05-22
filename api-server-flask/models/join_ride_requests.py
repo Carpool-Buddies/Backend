@@ -10,9 +10,9 @@ class JoinRideRequests(db.Model):
     status = db.Column(db.String(20), nullable=False, default='pending')
     requested_seats = db.Column(db.Integer, nullable=False, default=1)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.now(pytz.timezone('Israel')))
-
+    
     def __repr__(self):
-        return f"JoinRideRequest {self.id}"
+        return f"<JoinRideRequests passenger_id={self.passenger_id} ride_id={self.ride_id} status={self.status}>"
 
     def save(self):
         db.session.add(self)

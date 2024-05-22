@@ -21,7 +21,7 @@ class FutureRidePost:
         except ValueError:
             raise ValueError("Invalid date format. Use ISO 8601 format: 'YYYY-MM-DDTHH:MM:SS.sssZ'.")
 
-        if self.departure_datetime <= datetime.utcnow():
+        if self.departure_datetime <= datetime.now():
             raise ValueError("Departure date must be in the future")
 
         if self.available_seats <= 0:
