@@ -2,7 +2,7 @@ import re
 import googlemaps
 from api.config import BaseConfig
 
-gmaps = googlemaps.Client(key=BaseConfig.GOOGLE_MAPS_API_KEY)
+gmaps = None # TODO: return after generate api key = googlemaps.Client(key=BaseConfig.GOOGLE_MAPS_API_KEY)
 
 def parse_location(location_str):
     """
