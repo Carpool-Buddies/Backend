@@ -1,5 +1,7 @@
 from models import RideOffers, Rides, JoinRideRequests
 from datetime import datetime, timedelta
+
+from services.specifications import *
 from utils.response import Response
 
 class PassengerService:

@@ -117,7 +117,7 @@ class join_ride_request(Resource):
             req_data = request.get_json()
 
             # Update ride details using DriverService
-            success = passenger_service.join_ride_request(user_id, req_data.get("ride_id"))
+            success = passenger_service.join_ride_request(user_id, req_data.get("ride_id"), 1)
 
             if success:
                 return {"success": True}, 200
