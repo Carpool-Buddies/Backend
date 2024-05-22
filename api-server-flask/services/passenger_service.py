@@ -1,7 +1,6 @@
-from models import RideOffers, Rides, JoinRideRequests
+from specifications import *
 from datetime import datetime
-
-from specifications import DepartureLocationSpecification, DestinationSpecification, DepartureDateSpecification, AndSpecification
+from models import RideOffers, Rides, JoinRideRequests
 from utils.response import Response
 
 
@@ -91,10 +90,10 @@ class PassengerService:
             join_request.save()
 
             response = Response(success=True, message="Request to join ride successful", status_code=200)
-            return response
+            return response.to_tuple()
         except Exception as e:
             response = Response(success=False, message=f"Error joining ride: {str(e)}", status_code=400)
-            return response
+            return response.to_tuple()
 
     @staticmethod
     def search_rides(departure_location=None, pickup_radius=None, destination=None, drop_radius=None,
@@ -119,7 +118,7 @@ class PassengerService:
             if departure_location and pickup_radius:
                 specifications.append(DepartureLocationSpecification(departure_location, pickup_radius))
             if destination and drop_radius:
-                specifications.append(DestinationSpecification(destination, drop_radius))
+                specifications.append(DestinationLocationSpecification(destination, drop_radius))
             if available_seats:
                 specifications.append(AvailableSeatsSpecification(available_seats))
             if departure_date:
@@ -132,7 +131,7 @@ class PassengerService:
             rides_list = [ride.to_dict() for ride in filtered_rides]
 
             response = Response(success=True, message="Rides retrieved successfully", status_code=200, data=rides_list)
-            return response
+            return response.to_tuple()
         except Exception as e:
             response = Response(success=False, message=f"Error searching rides: {str(e)}", status_code=400)
-            return response
+            return response.to_tuple()

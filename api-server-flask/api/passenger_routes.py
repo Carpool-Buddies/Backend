@@ -3,6 +3,8 @@ from flask_restx import Resource, Namespace, fields
 from services.passenger_service import PassengerService
 from services.driver_service import DriverService
 from datetime import datetime
+
+from utils.response import Response
 from .token_decorators import token_required
 
 # TODO: After adding the passenger service remove from comment
@@ -123,8 +125,7 @@ class join_ride_request(Resource):
         except Exception as e:
             return {"error": str(e)}, 500
 
-# Routes
-@passenger_ns.route('/join-ride')
+@passenger_ns.route('/rides/<int:ride_id>/join-ride')
 class JoinRide(Resource):
     """
     Allows passengers to join a ride.
@@ -132,14 +133,19 @@ class JoinRide(Resource):
 
     @passenger_ns.expect(passenger_join_ride_request, validate=True)
     @token_required
-    def post(self, current_user):
+    def post(self, current_user, ride_id):
         req_data = request.get_json()
-        ride_id = req_data.get("ride_id")
         requested_seats = req_data.get("requested_seats")
 
+        # Check if ride_id in request body matches the ride_id in the URL
+        if req_data.get("ride_id") != ride_id:
+            response = Response(success=False, message="Ride ID in the request body does not match the URL", status_code=400)
+            return response.to_tuple()
+
         # Join ride using PassengerService
-        response = PassengerService.join_ride_request(current_user.id, ride_id, requested_seats)
-        return response.to_tuple()
+        return PassengerService.join_ride_request(current_user.id, ride_id, requested_seats)
+
+
 
 
 @passenger_ns.route('/search-rides')
@@ -159,5 +165,4 @@ class SearchRides(Resource):
         available_seats = req_data.get("available_seats")
 
         # Search rides using PassengerService
-        response = PassengerService.search_rides(departure_location, pickup_radius, destination, drop_radius, departure_date, available_seats)
-        return response.to_tuple()
+        return PassengerService.search_rides(departure_location, pickup_radius, destination, drop_radius, departure_date, available_seats)
