@@ -21,7 +21,7 @@ class BaseConfig():
     GITHUB_CLIENT_ID     = os.getenv('GITHUB_CLIENT_ID' , None)
     GITHUB_CLIENT_SECRET = os.getenv('GITHUB_SECRET_KEY', None)
 
-    GOOGLE_MAPS_API_KEY = os.getenv('GOOGLE_API_KEY', None)
+    GOOGLE_MAPS_API_KEY = os.getenv('GOOGLE_MAPS_API_KEY', None)
     
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=1)
 
