@@ -65,17 +65,30 @@ class DestinationLocationSpecification(Specification):
         filtered_rides = [ride for ride in rides if self.is_satisfied_by(ride)]
         return filtered_rides
 
-
 class DepartureDateSpecification(Specification):
     def __init__(self, departure_datetime: datetime):
         self.departure_datetime = departure_datetime
 
     def is_satisfied_by(self, item) -> bool:
-        lower_bound = self.departure_datetime - timedelta(hours=5)
+        current_time = datetime.utcnow()
+        lower_bound = max(self.departure_datetime - timedelta(hours=5), current_time)
         upper_bound = self.departure_datetime + timedelta(hours=5)
         return lower_bound <= item.departure_datetime <= upper_bound
 
     def apply(self, query: Query):
-        lower_bound = self.departure_datetime - timedelta(hours=5)
+        current_time = datetime.utcnow()
+        lower_bound = max(self.departure_datetime - timedelta(hours=5), current_time)
         upper_bound = self.departure_datetime + timedelta(hours=5)
-        return query.filter(Rides.departure_datetime.between(lower_bound, upper_bound))
+        return query.filter(
+            Rides.departure_datetime.between(lower_bound, upper_bound)
+        )
+
+class RideStatusSpecification(Specification):
+    def __init__(self, status: str = 'waiting'):
+        self.status = status
+
+    def is_satisfied_by(self, item) -> bool:
+        return item.status == self.status
+
+    def apply(self, query: Query):
+        return query.filter(Rides.status == self.status)

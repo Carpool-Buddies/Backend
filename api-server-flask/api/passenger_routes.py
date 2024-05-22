@@ -1,3 +1,4 @@
+import pytz
 from flask import request
 from flask_restx import Resource, Namespace, fields
 from services.passenger_service import PassengerService
@@ -6,6 +7,8 @@ from datetime import datetime
 
 from utils.response import Response
 from .token_decorators import token_required
+
+DEFAULT_RADIUS = 10
 
 # TODO: After adding the passenger service remove from comment
 passenger_service = PassengerService()
@@ -158,13 +161,19 @@ class SearchRides(Resource):
 
     @passenger_ns.expect(passenger_search_rides, validate=True)
     def post(self):
+        # TODO: Create time zone in the config
+        israel_tz = pytz.timezone('Asia/Jerusalem')
+        default_departure_date = datetime.now(israel_tz)
+
         req_data = request.get_json()
-        departure_location = req_data.get("departure_location")
-        pickup_radius = req_data.get("pickup_radius")
-        destination = req_data.get("destination")
-        drop_radius = req_data.get("drop_radius")
-        departure_date = req_data.get("departure_date")
-        available_seats = req_data.get("available_seats")
+
+        departure_location = req_data.get("departure_location", None)
+        pickup_radius = req_data.get("pickup_radius", DEFAULT_RADIUS)
+        destination = req_data.get("destination", None)
+        drop_radius = req_data.get("drop_radius", DEFAULT_RADIUS)
+        departure_date = req_data.get("departure_date", None)
+        available_seats = req_data.get("available_seats", default_departure_date)
 
         # Search rides using PassengerService
-        return PassengerService.search_rides(departure_location, pickup_radius, destination, drop_radius, departure_date, available_seats)
+        return PassengerService.search_rides(departure_location, pickup_radius, destination, drop_radius,
+                                             departure_date, available_seats)
