@@ -19,3 +19,5 @@ def clean_up_database():
         for table in reversed(meta.sorted_tables):
             db.session.execute(table.delete())
         db.session.commit()
+
+

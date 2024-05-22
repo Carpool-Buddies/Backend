@@ -1,8 +1,8 @@
-from models import RideOffers, Rides, JoinRideRequests
-from datetime import datetime, timedelta
-
+from models import RideOffers, JoinRideRequests
+import pytz
 from services.specifications import *
 from utils.response import Response
+from datetime import datetime, timedelta
 
 class PassengerService:
     @staticmethod
@@ -101,7 +101,7 @@ class PassengerService:
 
     @staticmethod
     def search_rides(departure_location=None, pickup_radius=None, destination=None, drop_radius=None,
-                     departure_date=None, available_seats=None):
+                     departure_date=None, available_seats=1):
         """
         Searches for rides based on location, date, and other criteria.
 
@@ -125,8 +125,12 @@ class PassengerService:
                 specifications.append(DestinationLocationSpecification(destination, drop_radius))
             if available_seats:
                 specifications.append(AvailableSeatsSpecification(available_seats))
-            if departure_date:
-                specifications.append(DepartureDateSpecification(departure_date))
+            if departure_date is None:
+                # Set departure_date to current time in Israel if not provided
+                israel_tz = pytz.timezone('Asia/Jerusalem')
+                departure_date = datetime.now(israel_tz)
+
+            specifications.append(DepartureDateSpecification(departure_date))
 
             composite_spec = AndSpecification(*specifications)
             query = Rides.query
