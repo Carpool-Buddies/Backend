@@ -3,6 +3,8 @@ from flask_restx import Resource, Namespace, fields
 from services.passenger_service import PassengerService
 from services.driver_service import DriverService
 from datetime import datetime
+
+from utils.response import Response
 from .token_decorators import token_required
 
 # TODO: After adding the passenger service remove from comment
@@ -23,14 +25,29 @@ passenger_make_ride_offer = passenger_ns.model('PassengerMakeRideOfferModel',
                                                 "departure_datetime": fields.DateTime(required=True),
                                                 "notes": fields.String(required=False)
                                                 })
+
 passenger_get_rides = passenger_ns.model('PassengerGetRides', {
     'date': fields.DateTime(required=True)
 })
 
-passenger_join_ride_request = passenger_ns.model('JoinRideRequest',
+passenger_join_ride_request1 = passenger_ns.model('JoinRideRequest',
                                                  {
                                                      "ride_id": fields.Integer(required=True)
                                                  })
+
+passenger_join_ride_request = passenger_ns.model('JoinRideRequest', {
+    "ride_id": fields.Integer(required=True),
+    "requested_seats": fields.Integer(required=True)
+})
+
+passenger_search_rides = passenger_ns.model('SearchRides', {
+    "departure_location": fields.String(required=False),
+    "pickup_radius": fields.Float(required=False),
+    "destination": fields.String(required=False),
+    "drop_radius": fields.Float(required=False),
+    "departure_date": fields.Date(required=False),
+    "available_seats": fields.Integer(required=False)
+})
 
 """
     Flask-Restx routes
@@ -90,7 +107,7 @@ class join_ride_request(Resource):
     """
 
     @token_required
-    @passenger_ns.expect(passenger_join_ride_request, validate=True)
+    @passenger_ns.expect(passenger_join_ride_request1, validate=True)
     def put(self, current_user, user_id):
         try:
             # Check if the current user is authorized to view the ride posts of the specified user
@@ -100,7 +117,7 @@ class join_ride_request(Resource):
             req_data = request.get_json()
 
             # Update ride details using DriverService
-            success = passenger_service.join_ride_request(user_id, req_data.get("ride_id"))
+            success = passenger_service.join_ride_request(user_id, req_data.get("ride_id"), 1)
 
             if success:
                 return {"success": True}, 200
@@ -109,3 +126,45 @@ class join_ride_request(Resource):
 
         except Exception as e:
             return {"error": str(e)}, 500
+
+@passenger_ns.route('/rides/<int:ride_id>/join-ride')
+class JoinRide(Resource):
+    """
+    Allows passengers to join a ride.
+    """
+
+    @passenger_ns.expect(passenger_join_ride_request, validate=True)
+    @token_required
+    def post(self, current_user, ride_id):
+        req_data = request.get_json()
+        requested_seats = req_data.get("requested_seats")
+
+        # Check if ride_id in request body matches the ride_id in the URL
+        if req_data.get("ride_id") != ride_id:
+            response = Response(success=False, message="Ride ID in the request body does not match the URL", status_code=400)
+            return response.to_tuple()
+
+        # Join ride using PassengerService
+        return PassengerService.join_ride_request(current_user.id, ride_id, requested_seats)
+
+
+
+
+@passenger_ns.route('/search-rides')
+class SearchRides(Resource):
+    """
+    Allows passengers to search for rides.
+    """
+
+    @passenger_ns.expect(passenger_search_rides, validate=True)
+    def post(self):
+        req_data = request.get_json()
+        departure_location = req_data.get("departure_location")
+        pickup_radius = req_data.get("pickup_radius")
+        destination = req_data.get("destination")
+        drop_radius = req_data.get("drop_radius")
+        departure_date = req_data.get("departure_date")
+        available_seats = req_data.get("available_seats")
+
+        # Search rides using PassengerService
+        return PassengerService.search_rides(departure_location, pickup_radius, destination, drop_radius, departure_date, available_seats)

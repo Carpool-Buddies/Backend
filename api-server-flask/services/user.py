@@ -77,17 +77,21 @@ class User:
     def update_phone_number(self, new_phone_number):
         self.phone_number = new_phone_number
         self.__validate_phone_number()
-        self.current_user.update_field('phone_number', new_phone_number)
+        if self.current_user:
+            self.current_user.update_field('phone_number', new_phone_number)
 
     def update_first_name(self, new_first_name):
         self.first_name = new_first_name
-        self.current_user.update_field('first_name', new_first_name)
+        if self.current_user:
+            self.current_user.update_field('first_name', new_first_name)
 
     def update_last_name(self, new_last_name):
         self.last_name = new_last_name
-        self.current_user.update_field('last_name', new_last_name)
+        if self.current_user:
+            self.current_user.update_field('last_name', new_last_name)
 
     def update_birthday(self, new_birthday):
         self.birthday = new_birthday
         self.__validate_birthday()
-        self.current_user.update_field('birthday', new_birthday)
+        if self.current_user:
+            self.current_user.update_field('birthday', new_birthday)
