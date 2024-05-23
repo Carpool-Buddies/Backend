@@ -1,5 +1,4 @@
 from math import radians, sin, cos, sqrt, atan2
-from utils.location_utils import parse_location
 
 class MapsService:
     def __init__(self, api_key=None):
