@@ -19,7 +19,13 @@ db.init_app(app)
 
 rest_api.init_app(app)
 
-CORS(app)
+CORS(app, supports_credentials=True)
+
+app.config.update(
+    SESSION_COOKIE_SECURE=True,
+    SESSION_COOKIE_SAMESITE='None'
+)
+
 
 
 # Setup database
