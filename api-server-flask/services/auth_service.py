@@ -42,6 +42,7 @@ def send_verification_mail(_receiver, _code):
     msg.set_content("your verification code is: " + str(_code))
     msg['subject'] = subject
     msg['to'] = _receiver
+    msg['From'] = email
     server = smtplib.SMTP("smtp.gmail.com", 587)
     server.starttls()
     server.login(email, os.environ.get("email_server_password"))
