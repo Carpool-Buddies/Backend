@@ -49,8 +49,9 @@ passenger_search_rides = passenger_ns.model('SearchRides', {
     "pickup_radius": fields.Float(required=False),
     "destination": fields.String(required=False),
     "drop_radius": fields.Float(required=False),
-    "departure_date": fields.Date(required=False),
-    "available_seats": fields.Integer(required=False)
+    "departure_date": fields.DateTime(required=False),
+    "available_seats": fields.Integer(required=False),
+    "delta_hours": fields.Integer(required=False, default=5)
 })
 
 """
@@ -58,6 +59,7 @@ passenger_search_rides = passenger_ns.model('SearchRides', {
 """
 
 
+@passenger_ns.doc(security='JWT Bearer')
 @passenger_ns.route('/make-ride-offer')
 class PostFutureRides(Resource):
     """
@@ -131,6 +133,7 @@ class join_ride_request(Resource):
         except Exception as e:
             return {"error": str(e)}, 500
 
+@passenger_ns.doc(security='JWT Bearer')
 @passenger_ns.route('/rides/<int:ride_id>/join-ride')
 class JoinRide(Resource):
     """
@@ -153,7 +156,7 @@ class JoinRide(Resource):
 
 
 
-
+@passenger_ns.doc(security='JWT Bearer')
 @passenger_ns.route('/search-rides')
 class SearchRides(Resource):
     """
@@ -161,20 +164,24 @@ class SearchRides(Resource):
     """
 
     @passenger_ns.expect(passenger_search_rides, validate=True)
-    def post(self):
-        # TODO: Create time zone in the config
-        israel_tz = pytz.timezone('Asia/Jerusalem')
-        default_departure_date = datetime.now(israel_tz)
-
+    @token_required
+    def post(self, current_user):
         req_data = request.get_json()
 
         departure_location = req_data.get("departure_location", None)
         pickup_radius = req_data.get("pickup_radius", DEFAULT_RADIUS)
         destination = req_data.get("destination", None)
         drop_radius = req_data.get("drop_radius", DEFAULT_RADIUS)
-        departure_date = req_data.get("departure_date", default_departure_date)
+        departure_date_str = req_data.get("departure_datetime", None)
         available_seats = req_data.get("available_seats", DEFAULT_AVAILABLE_SEATS)
+        delta_hours = req_data.get("delta_hours", 5)
+
+        # Parse departure_date as datetime
+        if departure_date_str:
+            departure_date = datetime.fromisoformat(departure_date_str)
+        else:
+            departure_date = datetime.now()
 
         # Search rides using PassengerService
-        return PassengerService.search_rides(departure_location, pickup_radius, destination, drop_radius,
-                                             departure_date, available_seats)
+        return PassengerService.search_rides(current_user.id, departure_location, pickup_radius, destination, drop_radius,
+                                                 departure_date, available_seats, delta_hours)

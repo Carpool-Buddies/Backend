@@ -3,6 +3,8 @@ from models import RideOffers, JoinRideRequests
 from services.specifications import *
 from utils.response import Response
 
+from geopy.distance import geodesic
+
 class PassengerService:
     @staticmethod
     def makeRideOffer(_passenger_id, _departure_location, _pickup_radius, _destination, _drop_radius,
@@ -98,19 +100,25 @@ class PassengerService:
             response = Response(success=False, message=f"Error joining ride: {str(e)}", status_code=400)
             return response.to_tuple()
 
+    def __parse_location(location_str):
+        lat, lng = map(float, location_str.split(','))
+        return lat, lng
+
     @staticmethod
-    def search_rides(departure_location=None, pickup_radius=None, destination=None, drop_radius=None,
-                     departure_date=None, available_seats=1):
+    def search_rides(user_id, departure_location=None, pickup_radius=None, destination=None, drop_radius=None,
+                     departure_date=None, available_seats=None, delta_hours=5):
         """
         Searches for rides based on location, date, and other criteria.
 
         Parameters:
+        - user_id: int, the ID of the current user
         - departure_location: str, the departure location of the ride
         - pickup_radius: float, the radius from the departure location
         - destination: str, the destination of the ride
         - drop_radius: float, the radius from the destination
-        - departure_date: date, the date of departure
+        - departure_date: datetime, the datetime of departure
         - available_seats: int, the number of available seats
+        - delta_hours: int, the number of hours for the time window (default is 5)
 
         Returns:
         - response: Response, contains the list of matching rides
@@ -118,25 +126,40 @@ class PassengerService:
         try:
             specifications = []
 
-            if departure_location and pickup_radius:
-                specifications.append(DepartureLocationSpecification(departure_location, pickup_radius))
-            if destination and drop_radius:
-                specifications.append(DestinationLocationSpecification(destination, drop_radius))
             if available_seats:
                 specifications.append(AvailableSeatsSpecification(available_seats))
             if departure_date:
-                specifications.append(DepartureDateSpecification(departure_date))
+                specifications.append(DepartureDateSpecification(departure_date, delta_hours))
 
             # Add RideStatusSpecification to ensure rides are in "waiting" status
             specifications.append(RideStatusSpecification('waiting'))
+            # Add NotMyRideSpecification to ensure rides are not owned by the current user
+            specifications.append(NotMyRideSpecification(user_id))
 
             composite_spec = AndSpecification(*specifications)
             query = Rides.query
-            filtered_rides = composite_spec.apply(query)
+            filtered_rides_query = composite_spec.apply(query)
+            filtered_rides = filtered_rides_query.all()
+
+            # In-memory filtering for departure and destination locations
+            if departure_location and pickup_radius:
+                dep_lat, dep_lng = map(float, departure_location.split(','))
+                filtered_rides = [
+                    ride for ride in filtered_rides
+                    if geodesic((dep_lat, dep_lng), parse_location(ride.departure_location)).km <= pickup_radius
+                ]
+
+            if destination and drop_radius:
+                dest_lat, dest_lng = map(float, destination.split(','))
+                filtered_rides = [
+                    ride for ride in filtered_rides
+                    if geodesic((dest_lat, dest_lng), parse_location(ride.destination)).km <= drop_radius
+                ]
 
             rides_list = [ride.to_dict() for ride in filtered_rides]
 
-            response = Response(success=True, message="Rides retrieved successfully", status_code=200, data=rides_list)
+            response = Response(success=True, message="Rides retrieved successfully", status_code=200,
+                                data={"ride_posts": rides_list})
             return response.to_tuple()
         except Exception as e:
             response = Response(success=False, message=f"Error searching rides: {str(e)}", status_code=400)
