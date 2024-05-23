@@ -18,7 +18,7 @@ rest_api = Api(version="1.0", title="Carpool Buddies API")
 
 rest_api.add_namespace(auth_ns, path='/api/auth')
 rest_api.add_namespace(driver_ns, path='/api/drivers')
-rest_api.add_namespace(passenger_ns, path='/passengers')
+rest_api.add_namespace(passenger_ns, path='/api/passengers')
 
 
 

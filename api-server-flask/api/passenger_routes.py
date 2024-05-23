@@ -83,7 +83,7 @@ class GetRides(Resource):
 
 
 @passenger_ns.doc(security='JWT Bearer')
-@passenger_ns.route('/<int:user_id>/rides/join')
+@passenger_ns.route('/<int:user_id>/rides/join_ride')
 class join_ride_request(Resource):
     """
     ask for confirmation to join a ride

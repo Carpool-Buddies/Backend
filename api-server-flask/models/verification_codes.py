@@ -26,7 +26,6 @@ class VerificationCodes(db.Model):
         db.session.delete(self)
         db.session.commit()
 
-
     @staticmethod
     def send_code(_verification_code):
         _verification_code.hash_code()
@@ -43,14 +42,14 @@ class VerificationCodes(db.Model):
         if user_code:
             is_correct_code = user_code.check_code(_code)
             if not is_correct_code:
-                raise Exception("Code is incorrect",401)
+                raise Exception("Code is incorrect", 401)
             user_code.remove()
             in_time = time_left(user_code.date_send, datetime.now())
             if not in_time:
-                raise Exception("The code is expired",403)
+                raise Exception("The code is expired", 403)
             return True
         else:
-            raise Exception("User is not exist",404)
+            raise Exception("User is not exist", 404)
 
     def update_field(self, field, value):
         if hasattr(self, field):
