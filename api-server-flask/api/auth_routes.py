@@ -34,11 +34,15 @@ login_model = auth_ns.model('LoginModel', {"email": fields.String(required=True,
                                            "password": fields.String(required=True, min_length=4, max_length=16)
                                            })
 
-user_edit_model = auth_ns.model('UserEditModel',
-                                {"first_name": fields.String(required=True, min_length=1, max_length=32),
-                                 "last_name": fields.String(required=True, min_length=1, max_length=32),
-                                 "birthday": fields.Date(required=True)
-                                 })
+update_user_details_model = auth_ns.model('UserEdit', {
+    'password': fields.String(required=False, min_length=6, max_length=32),
+    'first_name': fields.String(required=False, min_length=1, max_length=32),
+    'last_name': fields.String(required=False, min_length=1, max_length=32),
+    'phone_number': fields.String(required=False, description='New phone number'),
+    'birthday': fields.Date(required=False, description='New birthday in YYYY-MM-DD format')
+})
+
+
 get_code_model = auth_ns.model('GetCodeModel', {"email": fields.String(required=True, min_length=1, max_length=32)})
 enter_code_model = auth_ns.model('EnterCodeModel', {"code": fields.String(required=True, min_length=1, max_length=32)})
 
@@ -145,25 +149,6 @@ class Login(Resource):
 
 
 @auth_ns.doc(security='JWT Bearer')
-@auth_ns.route('/edit')
-class EditUser(Resource):
-    """
-       Edits User's username or password or both using 'user_edit_model' input
-    """
-
-    @auth_ns.expect(user_edit_model)
-    @token_required
-    def post(self, current_user):
-        req_data = request.get_json()
-
-        _new_first_name = req_data.get("first_name")
-        _new_last_name = req_data.get("last_name")
-        _new_phone_number = req_data.get("phone_number")
-        _new_birthday = req_data.get("birthday")
-        return auth.edit_user(current_user, _new_first_name, _new_last_name, _new_phone_number, _new_birthday)
-
-
-@auth_ns.doc(security='JWT Bearer')
 @auth_ns.route('/logout')
 class LogoutUser(Resource):
     """
@@ -200,3 +185,38 @@ class UserDetails(Resource):
                 "id": user_id,
                 "first_name": first_name,
                 "last_name": last_name}, 200
+
+
+
+
+
+@auth_ns.doc(security='JWT Bearer')
+@auth_ns.route('/update-user-details')
+class UpdateUserDetails(Resource):
+    """
+    Updates User's details using 'user_edit_model' input
+    """
+
+    @auth_ns.expect(update_user_details_model)
+    @token_required
+    def post(self, current_user):
+        req_data = request.get_json()
+
+        _new_password = req_data.get("password")
+        _new_first_name = req_data.get("first_name")
+        _new_last_name = req_data.get("last_name")
+        _new_phone_number = req_data.get("phone_number")
+        _new_birthday = req_data.get("birthday")
+
+        new_details = {
+            "password": _new_password,
+            "first_name": _new_first_name,
+            "last_name": _new_last_name,
+            "phone_number": _new_phone_number,
+            "birthday": _new_birthday
+        }
+
+        # Filter out None values
+        new_details = {k: v for k, v in new_details.items() if v is not None}
+
+        return auth.update_user_details(current_user.id, new_details)

@@ -47,7 +47,7 @@ def logout_user(client, token):
         content_type="application/json")
     return response
 
-def edit_user(client, token, first_name=FIRST_NAME, last_name=LAST_NAME, birthday=VALID_BIRTHDAY):
+def update_user_details(client, token, first_name=FIRST_NAME, last_name=LAST_NAME, birthday=VALID_BIRTHDAY):
     headers = {"Authorization": f"{token}"}
     response = client.post("api/auth/edit", json={
         "first_name": first_name,
