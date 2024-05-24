@@ -96,11 +96,38 @@ class Users(db.Model):
             for key, value in new_details.items():
                 if key == "password":
                     self.set_password(value)
-                # if key == "birthday":
-                #     value = datetime.strptime(value, '%Y-%m-%d')
-                setattr(self, key, value)
+                elif key == "birthday":
+                    # Convert the birthday to a date object
+                    value = datetime.strptime(value, '%Y-%m-%d').date()
+                    setattr(self, key, value)
+                else:
+                    setattr(self, key, value)
             self.save()
         except Exception as e:
             print(f"Error updating user details: {str(e)}")
             db.session.rollback()
             raise Exception("Failed to update user details") from e
+
+    # def update_user_details(self, new_details):
+    #     """
+    #     Updates the user details with new information.
+    #
+    #     Parameters:
+    #     - new_details: dict, a dictionary containing the updated details for the user
+    #
+    #     Raises:
+    #     - Exception: If an error occurs during the update process
+    #     """
+    #     try:
+    #         for key, value in new_details.items():
+    #             if key == "password":
+    #                 self.set_password(value)
+    #             # if key == "birthday":
+    #             #     value = datetime.strptime(value, '%Y-%m-%d')
+    #             else:
+    #                 setattr(self, key, value)
+    #         self.save()
+    #     except Exception as e:
+    #         print(f"Error updating user details: {str(e)}")
+    #         db.session.rollback()
+    #         raise Exception("Failed to update user details") from e
