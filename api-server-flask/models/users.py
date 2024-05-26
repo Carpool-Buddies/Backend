@@ -98,7 +98,7 @@ class Users(db.Model):
                     self.set_password(value)
                 elif key == "birthday":
                     # Convert the birthday to a date object
-                    value = datetime.strptime(value, '%Y-%m-%d').date()
+                    value = value.date()
                     setattr(self, key, value)
                 else:
                     setattr(self, key, value)

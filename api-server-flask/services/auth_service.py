@@ -57,9 +57,7 @@ class AuthService:
     def register_user(email, password, first_name, last_name, phone_number, birthday):
         try:
             # Create and validate the user
-            validate_all(email=email, password=password,birthday=birthday, phone_number=phone_number)
-            # user = User(email, password, first_name, last_name, phone_number, birthday)
-            # user.validate()
+            validate_all(email=email, password=password, birthday=birthday, phone_number=phone_number)
 
             # Register the user and return a success response
             user = Users.register_user(email, password, first_name, last_name, phone_number, birthday)
@@ -237,9 +235,9 @@ class AuthService:
             # Validate the  fields
             if "password" in new_details.keys():
                 validate_password(new_details["password"])
-            elif "phone_number" in new_details.keys():
+            if "phone_number" in new_details.keys():
                 validate_phone_number(new_details["phone_number"])
-            elif "birthday" in new_details.keys():
+            if "birthday" in new_details.keys():
                 validate_birthday(new_details["birthday"])  # Validate birthday
                 new_details["birthday"] = datetime.strptime(new_details["birthday"], '%Y-%m-%d')
             # Update the fields

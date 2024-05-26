@@ -57,9 +57,20 @@ def driver_get_ride_posts_by_user_id(client, token, user_id):
     )
     return response
 
+def driver_get_future_ride_posts_by_user_id(client, token, user_id):
+    response = client.get(
+        f"/api/drivers/{user_id}/future-rides",
+        headers={'Content-Type': 'application/json', 'accept': 'application/json', "Authorization": f"{token}"}
+    )
+    return response
+
 def get_ride_posts(client, token, user_id):
     get_response = driver_get_ride_posts_by_user_id(client, token, user_id)
     ride_posts = get_response.get_json()["ride_posts"]
+    return ride_posts
+def get_future_ride_posts(client, token, user_id):
+    get_response = driver_get_future_ride_posts_by_user_id(client, token, user_id)
+    ride_posts = get_response.get_json()["future_rides"]
     return ride_posts
 
 def login(client):
@@ -142,6 +153,27 @@ def test_GivenInvalidUserID_WhenGetRidePost_ThanFailAndGetAppropiateResponse(cli
     driver_post_future_rides(client, token)
     # Get ride posts
     get_response = driver_get_ride_posts_by_user_id(client, token, user_id + 1)
+    assert get_response.status_code == UNAUTHORIZED_CODE
+
+# -----------------------------------------------------------
+#                  Driver - Get future post ride
+# -----------------------------------------------------------
+def test_GivenExistsRidePost_WhenGetFutureRidePost_ThanGetAppropiateResponse(client):
+    register_user(client)
+    token, user_id = login(client)
+    pre_post_ride = len(get_future_ride_posts(client, token, user_id))
+    # Post a future ride
+    driver_post_future_rides(client, token)
+    post_post_ride = len(get_future_ride_posts(client, token, user_id))
+    assert post_post_ride == pre_post_ride + 1
+
+def test_GivenInvalidUserID_WhenGetFutureRidePost_ThanFailAndGetAppropiateResponse(client):
+    register_user(client)
+    token, user_id = login(client)
+    # Post a future ride
+    driver_post_future_rides(client, token)
+    # Get ride posts
+    get_response = driver_get_future_ride_posts_by_user_id(client, token, user_id + 1)
     assert get_response.status_code == UNAUTHORIZED_CODE
 
 # -----------------------------------------------------------
