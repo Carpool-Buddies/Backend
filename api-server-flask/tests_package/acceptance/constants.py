@@ -16,6 +16,7 @@ USER_ALREADY_EXISTS_MESSAGE = "already exists"
 INCORRECT_CREDENTIALS_LOGIN = "Invalid credentials."
 REGISTRATION_FAILED = "Registration failed:"
 FUTURE_RIDES_INVALID_INPUT_MESSAGE = ""
+UNAUTHORIZED_ERROR = 'Valid JWT token is missing'
 
 # Constants for driver_post_future_rides function
 DEFAULT_DEPARTURE_LOCATION = "Location A"

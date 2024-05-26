@@ -245,4 +245,4 @@ def test_update_user_details_unauthorized(client):
     response = client.post("/api/auth/update-user-details", json=new_details, content_type="application/json")
     assert response.status_code == BAD_REQUEST_CODE
     response_data = json.loads(response.data)
-    assert response_data['msg'] == 'Token is missing or invalid'
+    assert response_data['msg'] == UNAUTHORIZED_ERROR
