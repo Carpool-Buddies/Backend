@@ -98,9 +98,9 @@ def test_GivenValidUserData_thenSignUp_returnSuccessCodeAndMsg(email, password, 
     # Multiple '@' symbols
     ("user1@@example.com", "ValidPassword1!", "John", "Doe", "1234567890", "1990-01-01"),
     # Leading whitespace
-    (" user1@example.com", "ValidPassword1!", "John", "Doe", "1234567890", "1990-01-01"),
+    (" @example.com", "ValidPassword1!", "John", "Doe", "1234567890", "1990-01-01"),
     # Trailing whitespace
-    ("user1@example.com ", "ValidPassword1!", "John", "Doe", "1234567890", "1990-01-01"),
+    ("user1@ ", "ValidPassword1!", "John", "Doe", "1234567890", "1990-01-01"),
     # No top-level domain
     ("user1@example", "ValidPassword1!", "John", "Doe", "1234567890", "1990-01-01"),
     # Contains spaces
@@ -166,6 +166,30 @@ def test_GivenExistingUser_thenSignUp_returnsAppropriateCodeAndMsg(client):
 def test_login_user(client):
     register_user(client)
     response = login_user(client)
+    assert response.status_code == SUCCESS_CODE
+    assert "token" in response.get_json()
+
+
+def test_GivenRegisterUpperCaseEmail_thenLogin_SuccessAndReturnAppropriateCodeAndMsg(client):
+    register_user(client, email=VALID_EMAIL.upper())
+    response = login_user(client)
+    assert response.status_code == SUCCESS_CODE
+    assert "token" in response.get_json()
+
+def test_GivenRegisterSpacesCaseEmail_thenLogin_SuccessAndReturnAppropriateCodeAndMsg(client):
+    register_user(client, email=VALID_EMAIL + "   ")
+    response = login_user(client)
+    assert response.status_code == SUCCESS_CODE
+    assert "token" in response.get_json()
+
+def test_GivenLoginSpacesCaseEmail_thenLogin_SuccessAndReturnAppropriateCodeAndMsg(client):
+    register_user(client)
+    response = login_user(client, email=VALID_EMAIL + "   ")
+    assert response.status_code == SUCCESS_CODE
+    assert "token" in response.get_json()
+def test_GivenLoginUpperCaseEmail_thenLogin_SuccessAndReturnAppropriateCodeAndMsg(client):
+    register_user(client)
+    response = login_user(client, email=VALID_EMAIL.upper())
     assert response.status_code == SUCCESS_CODE
     assert "token" in response.get_json()
 

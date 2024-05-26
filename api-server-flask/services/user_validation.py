@@ -17,7 +17,7 @@ def validate_all(email=None, password=None, birthday=None, phone_number=None):
         validate_phone_number(phone_number)
 
 def validate_phone_number(phone_number):
-    regex = re.compile(r'^(\+\d{1,3})?[-.\s]?(\d{3})[-.\s]?(\d{3})[-.\s]?(\d{4})$')
+    regex = re.compile(r'^(\+\d{1,3}[\s-]?)?((\d{3}[\s-]?)|(\d{2}[\s-]?\d{2}[\s-]?))\d{3}[\s-]?\d{4}$')
     if not regex.search(phone_number):
         raise PhoneNumberValidationError("Invalid phone number format.")
 

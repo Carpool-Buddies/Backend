@@ -2,7 +2,6 @@ import random
 
 from api.config import BaseConfig
 from services import login_attempt_tracker
-from services.user import User
 from services.user_validation import *
 from utils.response import Response
 
@@ -58,11 +57,12 @@ class AuthService:
     def register_user(email, password, first_name, last_name, phone_number, birthday):
         try:
             # Create and validate the user
-            user = User(email, password, first_name, last_name, phone_number, birthday)
-            user.validate()
+            validate_all(email=email, password=password,birthday=birthday, phone_number=phone_number)
+            # user = User(email, password, first_name, last_name, phone_number, birthday)
+            # user.validate()
 
             # Register the user and return a success response
-            user = Users.register_user(user)
+            user = Users.register_user(email, password, first_name, last_name, phone_number, birthday)
             response = Response(success=True, message="User registered successfully", status_code=200,
                                 data={"userID": user.id})
             return response.to_tuple()

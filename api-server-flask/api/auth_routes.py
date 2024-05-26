@@ -62,7 +62,7 @@ class Register(Resource):
         session["Hello"] = "World"
         req_data = request.get_json()
 
-        _email = req_data.get("email")
+        _email = req_data.get("email").lower().strip()
         _password = req_data.get("password")
         _first_name = req_data.get("first_name")
         _last_name = req_data.get("last_name")
@@ -81,7 +81,7 @@ class GetCode(Resource):
     @auth_ns.expect(get_code_model, validate=True)
     def post(self):
         req_data = request.get_json()
-        _email = req_data.get("email")
+        _email = req_data.get("email").lower().strip()
         resp = auth.getCode(_email)
         if resp[0]['success']:
             session["email"] = _email
@@ -142,7 +142,7 @@ class Login(Resource):
     def post(self):
         req_data = request.get_json()
 
-        _email = req_data.get("email")
+        _email = req_data.get("email").lower().strip()
         _password = req_data.get("password")
 
         return auth.login(_email, _password)
