@@ -6,6 +6,7 @@ from flask_restx import Resource, Namespace, fields
 from flask import session
 
 from services.auth_service import AuthService
+from utils.response import Response
 from .token_decorators import token_required
 
 auth = AuthService()
@@ -218,5 +219,9 @@ class UpdateUserDetails(Resource):
 
         # Filter out None values
         new_details = {k: v for k, v in new_details.items() if v is not None}
+
+        if not new_details:
+            response = Response(success=False, message="No details to update", status_code=400)
+            return response.to_tuple()
 
         return auth.update_user_details(current_user.id, new_details)

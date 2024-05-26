@@ -5,7 +5,7 @@ import json
 from api import app
 from models import db
 from tests_package.acceptance.constants import *
-from tests_package.acceptance.test_authentication import login_user, register_user
+from tests_package.acceptance.test_authentication import register_and_login
 from tests_package.acceptance.test_driver import driver_post_future_rides
 
 
@@ -23,14 +23,6 @@ def clean_up_database():
         for table in reversed(meta.sorted_tables):
             db.session.execute(table.delete())
         db.session.commit()
-
-def register_and_login(client, email=VALID_EMAIL, password=VALID_PASSWORD, first_name=FIRST_NAME, last_name=LAST_NAME, phone_number=VALID_PHONE_NUMBER, birthday=VALID_BIRTHDAY):
-    register_user(client, email, password, first_name, last_name, phone_number, birthday)
-    login_response = login_user(client, email, password)
-    login_response_data = json.loads(login_response.data.decode())
-    token = login_response_data["token"]
-    user_id = login_response_data["user"]["_id"]
-    return token, user_id
 
 
 def search_rides(client, token, departure_location=None, pickup_radius=None, destination=None, drop_radius=None, departure_datetime=None, available_seats=None, delta_hours=5):

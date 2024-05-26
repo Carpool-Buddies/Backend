@@ -73,6 +73,13 @@ def update_user_details(client, token, password=None, first_name=None, last_name
                            content_type="application/json")
     return response
 
+def register_and_login(client, email=VALID_EMAIL, password=VALID_PASSWORD, first_name=FIRST_NAME, last_name=LAST_NAME, phone_number=VALID_PHONE_NUMBER, birthday=VALID_BIRTHDAY):
+    register_user(client, email, password, first_name, last_name, phone_number, birthday)
+    login_response = login_user(client, email, password)
+    login_response_data = json.loads(login_response.data.decode())
+    token = login_response_data["token"]
+    user_id = login_response_data["user"]["_id"]
+    return token, user_id
 
 # -----------------------------------------------------------
 #                           Register
@@ -251,10 +258,30 @@ def test_update_user_password_success(client):
     response = login_user(client, password=VALID_PASSWORD + "1")
     assert response.status_code == SUCCESS_CODE
 
-def test_update_user_details_validation_error(client):
+def test_update_user_details_phone_number_validation_error(client):
     token, user_id = register_and_login(client)
     new_details = {
         'phone_number': 'invalid-phone'
+    }
+    response = update_user_details(client, token, **new_details)
+    assert response.status_code == BAD_REQUEST_CODE
+    response_data = json.loads(response.data)
+    assert 'Validation error' in response_data['msg']
+
+def test_update_user_details_birthday_validation_error(client):
+    token, user_id = register_and_login(client)
+    new_details = {
+        'birthday': '2020-10-10'
+    }
+    response = update_user_details(client, token, **new_details)
+    assert response.status_code == BAD_REQUEST_CODE
+    response_data = json.loads(response.data)
+    assert 'Validation error' in response_data['msg']
+
+def test_update_user_details_birthday_password_validation_error(client):
+    token, user_id = register_and_login(client)
+    new_details = {
+        'password': '2020-10-10'
     }
     response = update_user_details(client, token, **new_details)
     assert response.status_code == BAD_REQUEST_CODE

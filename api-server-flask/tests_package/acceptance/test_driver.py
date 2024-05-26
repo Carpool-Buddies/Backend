@@ -3,7 +3,7 @@ import json
 from api import app
 from models import db
 from .constants import *
-from .test_authentication import register_user, login_user
+from .test_authentication import register_user, login_user, register_and_login
 
 
 @pytest.fixture
@@ -20,7 +20,6 @@ def clean_up_database():
         for table in reversed(meta.sorted_tables):
             db.session.execute(table.delete())
         db.session.commit()
-
 
 def driver_post_future_rides(
     client,
@@ -79,6 +78,26 @@ def login(client):
     token = login_response_data["token"]
     user_id = login_response_data["user"]["_id"]
     return token, user_id
+
+def update_user_details(client, token, new_details):
+    """
+    Helper function to update user details.
+
+    Parameters:
+    - client: The test client to make requests
+    - token: The JWT token for authentication
+    - new_details: dict, the new details to update
+
+    Returns:
+    - response: The response object from the update request
+    """
+    response = client.post(
+        "/api/auth/update-user-details",
+        data=json.dumps(new_details),
+        headers={'Content-Type': 'application/json', 'accept': 'application/json', "Authorization": f"{token}"}
+    )
+    return response
+
 
 # -----------------------------------------------------------
 #                 Driver - Post future ride
@@ -179,8 +198,104 @@ def test_GivenInvalidUserID_WhenGetFutureRidePost_ThanFailAndGetAppropiateRespon
 # -----------------------------------------------------------
 #                  Driver - Update ride post
 # -----------------------------------------------------------
-# TODO
+def test_update_user_details_success(client):
+    token, user_id = register_and_login(client)
 
+    new_first_name = "Jane"
+    new_details = {
+        "password": VALID_PASSWORD + "1",
+        "first_name": new_first_name
+    }
+
+    response = update_user_details(client, token, new_details)
+
+    assert response.status_code == SUCCESS_CODE
+    response_data = response.get_json()
+    assert response_data["success"] is True
+    assert response_data["msg"] == "User details updated successfully"
+
+
+    # TODO: Login and see that the name updated
+
+    # # Verify the user details were updated
+    # with app.app_context():
+    #     user = Users.query.get(user_id)
+    #     assert user.check_password(DEFAULT_NEW_PASSWORD)
+    #     assert user.first_name == new_details["first_name"]
+    #     assert user.last_name == new_details["last_name"]
+    #     assert user.phone_number == new_details["phone_number"]
+    #     assert user.birthday.strftime("%Y-%m-%d") == new_details["birthday"]
+
+def test_update_user_details_partial_success(client):
+    token, user_id = register_and_login(client)
+
+    new_details = {
+        "first_name": "Jane",
+        "phone_number": "0987654321"
+    }
+
+    response = update_user_details(client, token, new_details)
+
+    assert response.status_code == SUCCESS_CODE
+    response_data = response.get_json()
+    assert response_data["success"] is True
+    assert response_data["msg"] == "User details updated successfully"
+
+    # TODO: Get the user data and check if is updated
+
+def test_update_user_details_no_change(client):
+    token, user_id = register_and_login(client)
+
+    new_details = {}
+
+    response = update_user_details(client, token, new_details)
+
+    assert response.status_code == BAD_REQUEST_CODE
+    response_data = response.get_json()
+    assert response_data["success"] is False
+    assert response_data["msg"] == "No details to update"
+
+def test_update_user_details_invalid_password(client):
+    token, user_id = register_and_login(client)
+
+    new_details = {
+        "password": "short"
+    }
+
+    response = update_user_details(client, token, new_details)
+
+    assert response.status_code == BAD_REQUEST_CODE
+    response_data = response.get_json()
+    assert response_data["success"] is False
+    assert USER_REGISTRATION_INVALID_PASSWORD_MESSAGE in response_data["msg"]
+
+def test_update_user_details_invalid_birthday(client):
+    token, user_id = register_and_login(client)
+
+    new_details = {
+        "birthday": "invalid-date"
+    }
+
+    response = update_user_details(client, token, new_details)
+
+    assert response.status_code == BAD_REQUEST_CODE
+    response_data = response.get_json()
+    assert response_data["success"] is False
+    assert USER_REGISTRATION_INVALID_BIRTHDAY_MESSAGE in response_data["msg"]
+
+def test_update_user_details_invalid_phone(client):
+    token, user_id = register_and_login(client)
+
+    new_details = {
+        "phone_number": "invalid-phone"
+    }
+
+    response = update_user_details(client, token, new_details)
+
+    assert response.status_code == BAD_REQUEST_CODE
+    response_data = response.get_json()
+    assert response_data["success"] is False
+    assert "Invalid phone number format" in response_data["msg"]
 # -----------------------------------------------------------
 #               Driver - Get join ride request
 # -----------------------------------------------------------
