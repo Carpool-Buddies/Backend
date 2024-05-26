@@ -26,18 +26,18 @@ class Users(db.Model):
         db.session.commit()
 
     @staticmethod
-    def register_user(user):
-        if Users.get_by_email(user.email):
-            raise EmailAlreadyExistsError(user.email)
+    def register_user(_email, _password, _first_name, _last_name, _phone_number, _birthday):
+        if Users.get_by_email(_email):
+            raise EmailAlreadyExistsError(_email)
 
         new_user = Users(
-            email=user.email,
-            first_name=user.first_name,
-            last_name=user.last_name,
-            phone_number=user.phone_number,
-            birthday=datetime.strptime(user.birthday, "%Y-%m-%d")
+            email=_email,
+            first_name=_first_name,
+            last_name=_last_name,
+            phone_number=_phone_number,
+            birthday=datetime.strptime(_birthday, "%Y-%m-%d")
         )
-        new_user.set_password(user.password)
+        new_user.set_password(_password)
         new_user.save()
 
         return new_user
