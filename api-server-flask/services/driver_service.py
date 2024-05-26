@@ -38,10 +38,10 @@ class DriverService:
                 notes=_notes
             )
             future_ride_post.validate()
-            future_ride_post.save()
+            ride = future_ride_post.save()
 
             response = Response(success=True, message="Ride posted successfully", status_code=200,
-                                data=future_ride_post.to_response())
+                                data=ride.to_dict())
             return response.to_tuple()
         except ValueError as ve:
             # Handle validation errors
@@ -75,7 +75,7 @@ class DriverService:
             response = Response(success=False, message="Error fetching ride posts", status_code=500)
             return response.to_tuple()
 
-    @staticmethod
+
     def get_future_ride_posts_by_user_id(user_id):
         """
         Fetches future ride posts associated with a specific user ID.
@@ -100,6 +100,7 @@ class DriverService:
             response = Response(success=False, message="Error fetching future ride posts", status_code=500)
             return response.to_tuple()
 
+    @staticmethod
     def update_ride_details(ride_id, new_details):
         """
         Updates details for a specific ride post with restrictions.

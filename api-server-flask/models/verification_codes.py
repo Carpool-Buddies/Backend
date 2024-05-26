@@ -7,8 +7,12 @@ from utils.auth_exceptions import *
 
 
 def time_left(date1, date2):
-    new_date = date1
-    difference = date2 - new_date
+    timezone = pytz.timezone('Asia/Jerusalem')
+    if date1.tzinfo is None:
+        date1 = timezone.localize(date1)
+    if date2.tzinfo is None:
+        date2 = timezone.localize(date2)
+    difference = date2 - date1
     minute = timedelta(minutes=3)
     return difference <= minute
 

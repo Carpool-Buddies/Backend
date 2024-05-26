@@ -1,9 +1,10 @@
-from models import RideOffers, JoinRideRequests
+from models import RideOffers, JoinRideRequests, db
 
 from services.specifications import *
 from utils.response import Response
 
 from geopy.distance import geodesic
+
 
 class PassengerService:
     @staticmethod
@@ -30,13 +31,13 @@ class PassengerService:
 
             # Create a new Ride object with the provided details
             new_ride = RideOffers(passenger_id=_passenger_id,
-                             departure_location=_departure_location,
-                             pickup_radius=_pickup_radius,
-                             destination=_destination,
-                             drop_radius=_drop_radius,
-                             departure_datetime=_departure_datetime,
-                             notes=_notes
-                             )
+                                  departure_location=_departure_location,
+                                  pickup_radius=_pickup_radius,
+                                  destination=_destination,
+                                  drop_radius=_drop_radius,
+                                  departure_datetime=_departure_datetime,
+                                  notes=_notes
+                                  )
             # Save the new ride to the database
             new_ride.save()
 
@@ -81,6 +82,12 @@ class PassengerService:
             # Retrieve the ride
             ride = Rides.query.get_or_404(ride_id)
 
+            if requested_seats<1:
+                raise ValueError("The request must have more than one seat")
+
+            if ride.driver_id == passenger_id:
+                raise ValueError("You cannot join the ride you created")
+
             # Check if the ride has available seats
             if ride.confirmed_passengers + requested_seats > ride.available_seats:
                 raise ValueError("No available seats")
@@ -90,7 +97,8 @@ class PassengerService:
                 ride_id=ride_id,
                 passenger_id=passenger_id,
                 status='pending',
-                requested_seats=requested_seats
+                requested_seats=requested_seats,
+                created_at = datetime.now()
             )
             join_request.save()
 
@@ -124,7 +132,7 @@ class PassengerService:
         - response: Response, contains the list of matching rides
         """
         try:
-            specifications = []
+            specifications = list()
 
             if available_seats:
                 specifications.append(AvailableSeatsSpecification(available_seats))
@@ -164,3 +172,13 @@ class PassengerService:
         except Exception as e:
             response = Response(success=False, message=f"Error searching rides: {str(e)}", status_code=400)
             return response.to_tuple()
+
+    @staticmethod
+    def get_my_rides(user_id):
+        try:
+            results = db.session.query(Rides, JoinRideRequests.status).join(JoinRideRequests,
+                                                                            Rides.ride_id == JoinRideRequests.ride_id).filter(
+                JoinRideRequests.passenger_id == user_id).all()
+            return results
+        except Exception as e:
+            raise Exception("cannot get the rides", 404)

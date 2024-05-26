@@ -3,6 +3,7 @@ import pytz
 from . import db
 from datetime import datetime
 
+
 class JoinRideRequests(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     ride_id = db.Column(db.Integer, db.ForeignKey('rides.id'), nullable=False)
@@ -10,7 +11,7 @@ class JoinRideRequests(db.Model):
     status = db.Column(db.String(20), nullable=False, default='pending')
     requested_seats = db.Column(db.Integer, nullable=False, default=1)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.now())
-    
+
     def __repr__(self):
         return f"<JoinRideRequests passenger_id={self.passenger_id} ride_id={self.ride_id} status={self.status}>"
 

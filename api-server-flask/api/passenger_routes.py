@@ -35,9 +35,9 @@ passenger_get_rides = passenger_ns.model('PassengerGetRides', {
 })
 
 passenger_join_ride_request1 = passenger_ns.model('JoinRideRequest',
-                                                 {
-                                                     "ride_id": fields.Integer(required=True)
-                                                 })
+                                                  {
+                                                      "ride_id": fields.Integer(required=True)
+                                                  })
 
 passenger_join_ride_request = passenger_ns.model('JoinRideRequest', {
     "ride_id": fields.Integer(required=True),
@@ -61,7 +61,7 @@ passenger_search_rides = passenger_ns.model('SearchRides', {
 
 @passenger_ns.doc(security='JWT Bearer')
 @passenger_ns.route('/make-ride-offer')
-class PostFutureRides(Resource):
+class MakeRideOffer(Resource):
     """
     Allows users to post future rides
     """
@@ -94,9 +94,10 @@ class GetRides(Resource):
     """
     get the future rides according to date and location
     """
+
     @token_required
     @passenger_ns.expect(passenger_get_rides, validate=True)
-    def put(self,current_user, user_id):
+    def put(self, current_user, user_id):
         if current_user.id != user_id:
             return {"message": "Unauthorized access to user's ride posts"}, 403
         req_data = request.get_json()
@@ -133,6 +134,7 @@ class join_ride_request(Resource):
         except Exception as e:
             return {"error": str(e)}, 500
 
+
 @passenger_ns.doc(security='JWT Bearer')
 @passenger_ns.route('/rides/<int:ride_id>/join-ride')
 class JoinRide(Resource):
@@ -148,12 +150,12 @@ class JoinRide(Resource):
 
         # Check if ride_id in request body matches the ride_id in the URL
         if req_data.get("ride_id") != ride_id:
-            response = Response(success=False, message="Ride ID in the request body does not match the URL", status_code=400)
+            response = Response(success=False, message="Ride ID in the request body does not match the URL",
+                                status_code=400)
             return response.to_tuple()
 
         # Join ride using PassengerService
         return PassengerService.join_ride_request(current_user.id, ride_id, requested_seats)
-
 
 
 @passenger_ns.doc(security='JWT Bearer')
@@ -183,5 +185,22 @@ class SearchRides(Resource):
             departure_date = datetime.now()
 
         # Search rides using PassengerService
-        return PassengerService.search_rides(current_user.id, departure_location, pickup_radius, destination, drop_radius,
-                                                 departure_date, available_seats, delta_hours)
+        return PassengerService.search_rides(current_user.id, departure_location, pickup_radius, destination,
+                                             drop_radius,
+                                             departure_date, available_seats, delta_hours)
+
+
+@passenger_ns.doc(security='JWT Bearer')
+@passenger_ns.route('/<int:user_id>/rides')
+class GetMyRideRequests(Resource):
+    @token_required
+    def get(self, current_user, user_id):
+        if current_user.id != user_id:
+            return {"message": "Unauthorized access to user's ride posts"}, 403
+        try:
+            resp = passenger_service.get_my_rides(user_id)
+        except Exception as e:
+            return {"success": False,
+                    "msg": str(e.args[0])},e.args[1]
+        return {"success": True,
+                "rides": resp}, 200
