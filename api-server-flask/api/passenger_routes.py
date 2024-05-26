@@ -49,7 +49,7 @@ passenger_search_rides = passenger_ns.model('SearchRides', {
     "pickup_radius": fields.Float(required=False),
     "destination": fields.String(required=False),
     "drop_radius": fields.Float(required=False),
-    "departure_date": fields.DateTime(required=False),
+    "departure_datetime": fields.DateTime(required=False),
     "available_seats": fields.Integer(required=False),
     "delta_hours": fields.Integer(required=False, default=5)
 })

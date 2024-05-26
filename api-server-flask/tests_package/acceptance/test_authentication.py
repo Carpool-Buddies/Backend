@@ -39,6 +39,14 @@ def login_user(client, email=VALID_EMAIL, password=VALID_PASSWORD):
         headers={'Content-Type': 'application/json', 'accept': 'application/json'})
     return response
 
+def register_and_login(client, email=VALID_EMAIL, password=VALID_PASSWORD, first_name=FIRST_NAME, last_name=LAST_NAME, phone_number=VALID_PHONE_NUMBER, birthday=VALID_BIRTHDAY):
+    register_user(client, email, password, first_name, last_name, phone_number, birthday)
+    login_response = login_user(client, email, password)
+    login_response_data = json.loads(login_response.data.decode())
+    token = login_response_data["token"]
+    user_id = login_response_data["user"]["_id"]
+    return token, user_id
+
 def logout_user(client, token):
     headers = {"Authorization": f"{token}"}
     response = client.post(
@@ -47,15 +55,22 @@ def logout_user(client, token):
         content_type="application/json")
     return response
 
-def update_user_details(client, token, first_name=FIRST_NAME, last_name=LAST_NAME, birthday=VALID_BIRTHDAY):
+
+def update_user_details(client, token, password=None, first_name=None, last_name=None, phone_number=None,
+                        birthday=None):
     headers = {"Authorization": f"{token}"}
-    response = client.post("api/auth/edit", json={
+    user_details = {
+        "password": password,
         "first_name": first_name,
         "last_name": last_name,
+        "phone_number": phone_number,
         "birthday": birthday
-        },
-        headers=headers,
-        content_type="application/json")
+    }
+    # Filter out None values
+    user_details = {k: v for k, v in user_details.items() if v is not None}
+
+    response = client.post("/api/auth/update-user-details", json=user_details, headers=headers,
+                           content_type="application/json")
     return response
 
 
@@ -183,10 +198,51 @@ def test_GivenNoLoggedInUser_thenLogout_returnAppropriateCodeAndMsg(client):
     assert response.status_code == BAD_REQUEST_CODE
 
 # -----------------------------------------------------------
-#                          Edit User
+#                          Update User Details
 # -----------------------------------------------------------
-def test_GivenLoggedInUser_thenEdit_returnAppropriateCodeAndMsg(client):
-    register_user(client)
+def test_update_user_details_success(client):
+    token, user_id = register_and_login(client)
+    new_details = {
+        'first_name': 'Updated',
+        'last_name': 'Name',
+        'phone_number': '987-654-3210',
+        'birthday': '1990-01-01'
+    }
+    response = update_user_details(client, token, **new_details)
+    assert response.status_code == SUCCESS_CODE
+    response_data = json.loads(response.data)
+    assert response_data['msg'] == 'User details updated successfully'
+
+def test_update_user_password_success(client):
+    token, user_id = register_and_login(client)
+    new_details = {
+        'password': VALID_PASSWORD + "1"
+    }
+    response = update_user_details(client, token, **new_details)
+    assert response.status_code == SUCCESS_CODE
+    response_data = json.loads(response.data)
+    assert response_data['msg'] == 'User details updated successfully'
     response = login_user(client)
-    # data = json.loads(response.data.decode())
-    # TODO: Implement the test
+    assert response.status_code == BAD_REQUEST_CODE
+    response = login_user(client, password=VALID_PASSWORD + "1")
+    assert response.status_code == SUCCESS_CODE
+
+def test_update_user_details_validation_error(client):
+    token, user_id = register_and_login(client)
+    new_details = {
+        'phone_number': 'invalid-phone'
+    }
+    response = update_user_details(client, token, **new_details)
+    assert response.status_code == BAD_REQUEST_CODE
+    response_data = json.loads(response.data)
+    assert 'Validation error' in response_data['msg']
+
+def test_update_user_details_unauthorized(client):
+    new_details = {
+        'first_name': 'Updated',
+        'last_name': 'Name'
+    }
+    response = client.post("/api/auth/update-user-details", json=new_details, content_type="application/json")
+    assert response.status_code == BAD_REQUEST_CODE
+    response_data = json.loads(response.data)
+    assert response_data['msg'] == UNAUTHORIZED_ERROR
