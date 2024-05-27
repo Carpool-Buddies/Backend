@@ -84,7 +84,7 @@ def test_search_rides_with_Michael_datetime(client):
     passenger_token, passenger_id = register_and_login(client, email="p" + VALID_EMAIL)
 
     # Post a future ride
-    year = datetime.now().year
+    year = datetime.now().year + 1
     departure_datetime = f'{year}-05-30T14:00:00.000Z'
     post_response = driver_post_future_rides(
         client, driver_token, "34.052235,-118.243683", DEFAULT_RADIUS, "36.169941,-115.139832", DEFAULT_RADIUS,
