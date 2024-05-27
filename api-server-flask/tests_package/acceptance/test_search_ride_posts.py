@@ -79,6 +79,36 @@ def test_search_rides(client):
         assert ride["_available_seats"] >= 2
         assert datetime.fromisoformat(ride["_departure_datetime"].replace('Z', '+00:00')) >= datetime.now()
 
+def test_search_rides_with_Michael_datetime(client):
+    driver_token, driver_id = register_and_login(client)
+    passenger_token, passenger_id = register_and_login(client, email="p" + VALID_EMAIL)
+
+    # Post a future ride
+    year = datetime.now().year
+    departure_datetime = f'{year}-05-30T14:00:00.000Z'
+    post_response = driver_post_future_rides(
+        client, driver_token, "34.052235,-118.243683", DEFAULT_RADIUS, "36.169941,-115.139832", DEFAULT_RADIUS,
+        departure_datetime, DEFAULT_AVAILABLE_SEATS, "No notes"
+    )
+    assert post_response.status_code == SUCCESS_CODE
+
+    # Search for rides
+    search_response = search_rides(
+        client, passenger_token, departure_location="34.052235,-118.243683", pickup_radius=DEFAULT_RADIUS, destination="36.169941,-115.139832", drop_radius=DEFAULT_RADIUS, departure_datetime=departure_datetime, delta_hours=2
+    )
+    search_data = search_response.get_json()
+
+    assert search_response.status_code == SUCCESS_CODE
+    assert "ride_posts" in search_data
+    assert len(search_data["ride_posts"]) > 0  # Ensure that we have at least one result
+
+    # Validate the search result details
+    for ride in search_data["ride_posts"]:
+        assert ride["_departure_location"] == "34.052235,-118.243683"
+        assert ride["_destination"] == "36.169941,-115.139832"
+        assert ride["_available_seats"] >= 2
+        assert datetime.fromisoformat(ride["_departure_datetime"].replace('Z', '+00:00')) >= datetime.now()
+
 def test_search_rides_no_departure_location(client):
     driver_token, driver_id = register_and_login(client)
     passenger_token, passenger_id = register_and_login(client, email="p" + VALID_EMAIL)
