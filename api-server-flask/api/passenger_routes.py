@@ -178,7 +178,8 @@ class SearchRides(Resource):
 
         # Parse departure_date as datetime
         if departure_date_str:
-            departure_date = datetime.fromisoformat(departure_date_str)
+            # departure_date = datetime.fromisoformat(departure_date_str)
+            departure_date = datetime.strptime(departure_date_str, '%Y-%m-%dT%H:%M:%S.%fZ')
         else:
             departure_date = datetime.now()
 
