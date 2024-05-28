@@ -187,7 +187,12 @@ class UserDetails(Resource):
                 "first_name": first_name,
                 "last_name": last_name}, 200
 
-
+@auth_ns.doc(security='JWT Bearer')
+@auth_ns.route('/users/<int:user_id>/profile')
+class UserProfile(Resource):
+    @token_required
+    def get(self, current_user, user_id):
+        return auth.get_user_profile(user_id)
 
 
 

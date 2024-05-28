@@ -250,7 +250,18 @@ class AuthService:
             return response.to_tuple()
         except Exception as e:
             # Handle other exceptions, log errors, etc.
-            print(f"Error updating user details: {str(e)}")
             response = Response(success=False, message="Error updating user details", status_code=500)
             return response.to_tuple()
+
+    @staticmethod
+    def get_user_profile(user_id):
+        try:
+            # Retrieve the user by its ID
+            user = Users.get_by_id(user_id)
+            response = Response(success=True, message="Get user profile successfully", status_code=200, data={"profile": user.to_profile()})
+            return response.to_tuple()
+        except Exception as e:
+            response = Response(success=False, message="Error get user profile: " + str(e), status_code=500)
+            return response.to_tuple()
+
 
