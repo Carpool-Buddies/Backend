@@ -1,9 +1,12 @@
+from datetime import timedelta, datetime
+
 import pytest
 import json
 from api import app
 from models import db
 from .constants import *
 from .test_authentication import register_user, login_user, register_and_login
+from .test_passenger import passanger_join_ride_request
 
 
 @pytest.fixture
@@ -100,6 +103,47 @@ def update_user_details(client, token, new_details):
     response = client.post(
         "/api/auth/update-user-details",
         data=json.dumps(new_details),
+        headers={'Content-Type': 'application/json', 'accept': 'application/json', "Authorization": f"{token}"}
+    )
+    return response
+
+def get_pending_requests(client, token, user_id, ride_id):
+    """
+    Helper function to get pending ride requests.
+
+    Parameters:
+    - client: The test client to make requests
+    - token: The JWT token for authentication
+    - user_id: The ID of the user making the request
+    - ride_id: The ID of the ride to get pending requests for
+
+    Returns:
+    - response: The response object from the get request
+    """
+    response = client.get(
+        f"/api/drivers/{user_id}/rides/manage_requests/{ride_id}",
+        headers={'Content-Type': 'application/json', 'accept': 'application/json', "Authorization": f"{token}"}
+    )
+    return response
+
+def manage_ride_request(client, token, user_id, ride_id, request_id, status_update):
+    """
+    Helper function to manage ride requests.
+
+    Parameters:
+    - client: The test client to make requests
+    - token: The JWT token for authentication
+    - user_id: The ID of the user making the request
+    - ride_id: The ID of the ride to manage requests for
+    - request_id: The ID of the request to manage
+    - status_update: The status update ('accept' or 'reject')
+
+    Returns:
+    - response: The response object from the put request
+    """
+    response = client.put(
+        f"/api/drivers/{user_id}/rides/manage_requests/{ride_id}",
+        data=json.dumps({"request_id": request_id, "status_update": status_update}),
         headers={'Content-Type': 'application/json', 'accept': 'application/json', "Authorization": f"{token}"}
     )
     return response
@@ -317,9 +361,210 @@ def test_update_user_details_invalid_phone(client):
 # -----------------------------------------------------------
 #               Driver - Get join ride request
 # -----------------------------------------------------------
-# TODO
+def test_get_pending_requests_success(client):
+    # Register and login a user
+    driver_token, driver_id = register_and_login(client)
+    passenger_token, passenger_id = register_and_login(client, email="p" + VALID_EMAIL)
+
+    # Post a future ride
+    departure_datetime = (datetime.now() + timedelta(days=1)).isoformat() + 'Z'
+    post_response = driver_post_future_rides(
+        client, driver_token, "34.052235,-118.243683", DEFAULT_RADIUS, "36.169941,-115.139832", DEFAULT_RADIUS,
+        departure_datetime, DEFAULT_AVAILABLE_SEATS, "No notes"
+    )
+    assert post_response.status_code == SUCCESS_CODE
+    ride_id = post_response.get_json()["ride_id"]
+
+    # Passenger joins the ride
+    join_response = passanger_join_ride_request(client, passenger_token, ride_id)
+    assert join_response.status_code == SUCCESS_CODE
+
+    # Get pending ride requests
+    pending_requests_response = get_pending_requests(client, driver_token, driver_id, ride_id)
+    assert pending_requests_response.status_code == SUCCESS_CODE
+    pending_requests_data = pending_requests_response.get_json()
+    assert "pending_requests" in pending_requests_data
+    assert len(pending_requests_data["pending_requests"]) > 0  # Ensure there is at least one pending request
 
 # -----------------------------------------------------------
 #               Driver - Manage join ride request
 # -----------------------------------------------------------
-# TODO
+def test_manage_ride_request_accept_success(client):
+    # Register and login a user
+    driver_token, driver_id = register_and_login(client)
+    passenger_token, passenger_id = register_and_login(client, email="p" + VALID_EMAIL)
+
+    # Post a future ride
+    departure_datetime = (datetime.now() + timedelta(days=1)).isoformat() + 'Z'
+    post_response = driver_post_future_rides(
+        client, driver_token, "34.052235,-118.243683", DEFAULT_RADIUS, "36.169941,-115.139832", DEFAULT_RADIUS,
+        departure_datetime, DEFAULT_AVAILABLE_SEATS, "No notes"
+    )
+    assert post_response.status_code == SUCCESS_CODE
+    ride_id = post_response.get_json()["ride_id"]
+
+    # Passenger joins the ride
+    join_response = passanger_join_ride_request(client, passenger_token, ride_id)
+    assert join_response.status_code == SUCCESS_CODE
+
+    # Get pending ride requests
+    pending_requests_response = get_pending_requests(client, driver_token, driver_id, ride_id)
+    assert pending_requests_response.status_code == SUCCESS_CODE
+    pending_requests_data = pending_requests_response.get_json()
+    assert "pending_requests" in pending_requests_data
+    assert len(pending_requests_data["pending_requests"]) > 0  # Ensure there is at least one pending request
+    pending_request = pending_requests_data["pending_requests"][0]
+    request_id = pending_request["id"]
+
+    # Accept the ride request
+    manage_request_response = manage_ride_request(client, driver_token, driver_id, ride_id, request_id, "accept")
+    assert manage_request_response.status_code == SUCCESS_CODE
+    manage_request_data = manage_request_response.get_json()
+    assert manage_request_data["success"] is True
+
+def test_manage_ride_request_reject_success(client):
+    # Register and login a user
+    driver_token, driver_id = register_and_login(client)
+    passenger_token, passenger_id = register_and_login(client, email="p" + VALID_EMAIL)
+
+    # Post a future ride
+    departure_datetime = (datetime.now() + timedelta(days=1)).isoformat() + 'Z'
+    post_response = driver_post_future_rides(
+        client, driver_token, "34.052235,-118.243683", DEFAULT_RADIUS, "36.169941,-115.139832", DEFAULT_RADIUS,
+        departure_datetime, DEFAULT_AVAILABLE_SEATS, "No notes"
+    )
+    assert post_response.status_code == SUCCESS_CODE
+    ride_id = post_response.get_json()["ride_id"]
+
+    # Passenger joins the ride
+    join_response = passanger_join_ride_request(client, passenger_token, ride_id, 2)
+    assert join_response.status_code == SUCCESS_CODE
+
+    # Get pending ride requests
+    pending_requests_response = get_pending_requests(client, driver_token, driver_id, ride_id)
+    assert pending_requests_response.status_code == SUCCESS_CODE
+    pending_requests_data = pending_requests_response.get_json()
+    assert "pending_requests" in pending_requests_data
+    assert len(pending_requests_data["pending_requests"]) > 0  # Ensure there is at least one pending request
+    pending_request = pending_requests_data["pending_requests"][0]
+    request_id = pending_request["id"]
+
+    # Reject the ride request
+    manage_request_response = manage_ride_request(client, driver_token, driver_id, ride_id, request_id, "reject")
+    assert manage_request_response.status_code == SUCCESS_CODE
+    manage_request_data = manage_request_response.get_json()
+    assert manage_request_data["success"] is True
+
+def test_manage_ride_request_unauthorized(client):
+    # Register and login a user
+    driver_token, driver_id = register_and_login(client)
+    passenger_token, passenger_id = register_and_login(client, email="p" + VALID_EMAIL)
+
+    # Post a future ride
+    departure_datetime = (datetime.now() + timedelta(days=1)).isoformat() + 'Z'
+    post_response = driver_post_future_rides(
+        client, driver_token, "34.052235,-118.243683", DEFAULT_RADIUS, "36.169941,-115.139832", DEFAULT_RADIUS,
+        departure_datetime, DEFAULT_AVAILABLE_SEATS, "No notes"
+    )
+    assert post_response.status_code == SUCCESS_CODE
+    ride_id = post_response.get_json()["ride_id"]
+
+    # Passenger joins the ride
+    join_response = passanger_join_ride_request(client, passenger_token, ride_id)
+    assert join_response.status_code == SUCCESS_CODE
+
+    # Get pending ride requests
+    pending_requests_response = get_pending_requests(client, driver_token, driver_id, ride_id)
+    assert pending_requests_response.status_code == SUCCESS_CODE
+    pending_requests_data = pending_requests_response.get_json()
+    assert "pending_requests" in pending_requests_data
+    assert len(pending_requests_data["pending_requests"]) > 0  # Ensure there is at least one pending request
+    pending_request = pending_requests_data["pending_requests"][0]
+    request_id = pending_request["id"]
+
+    # Unauthorized user tries to manage the ride request
+    manage_request_response = manage_ride_request(client, passenger_token, driver_id, ride_id, request_id, "accept")
+    assert manage_request_response.status_code == UNAUTHORIZED_CODE
+    manage_request_data = manage_request_response.get_json()
+    assert manage_request_data["success"] is False
+
+def test_driver_tries_to_join_own_ride(client):
+    # Register and login a driver
+    driver_token, driver_id = register_and_login(client)
+
+    # Post a future ride
+    departure_datetime = (datetime.now() + timedelta(days=1)).isoformat() + 'Z'
+    post_response = driver_post_future_rides(
+        client, driver_token, "34.052235,-118.243683", DEFAULT_RADIUS, "36.169941,-115.139832", DEFAULT_RADIUS,
+        departure_datetime, DEFAULT_AVAILABLE_SEATS, "No notes"
+    )
+    assert post_response.status_code == SUCCESS_CODE
+    ride_id = post_response.get_json()["ride_id"]
+
+    # Driver tries to join their own ride
+    join_response = passanger_join_ride_request(client, driver_token, ride_id, 1)
+    assert join_response.status_code == BAD_REQUEST_CODE
+    join_data = join_response.get_json()
+    assert join_data["success"] is False
+    assert "cannot join the ride you created" in join_data["msg"]
+
+def test_passenger_tries_to_join_ride_without_enough_seats(client):
+    # Register and login a driver and a passenger
+    driver_token, driver_id = register_and_login(client)
+    passenger_token, passenger_id = register_and_login(client, email="p" + VALID_EMAIL)
+
+    # Post a future ride with only 1 available seat
+    departure_datetime = (datetime.now() + timedelta(days=1)).isoformat() + 'Z'
+    post_response = driver_post_future_rides(
+        client, driver_token, "34.052235,-118.243683", DEFAULT_RADIUS, "36.169941,-115.139832", DEFAULT_RADIUS,
+        departure_datetime, 1, "No notes"
+    )
+    assert post_response.status_code == SUCCESS_CODE
+    ride_id = post_response.get_json()["ride_id"]
+
+    # Passenger tries to join the ride requesting 2 seats
+    join_response = passanger_join_ride_request(client, passenger_token, ride_id, 2)
+    assert join_response.status_code == BAD_REQUEST_CODE
+    join_data = join_response.get_json()
+    assert join_data["success"] is False
+    assert "No available seats" in join_data["msg"]
+
+def test_passenger_joins_ride_with_exact_seats(client):
+    # Register and login a driver and a passenger
+    driver_token, driver_id = register_and_login(client)
+    passenger_token, passenger_id = register_and_login(client, email="p" + VALID_EMAIL)
+
+    # Post a future ride with 2 available seats
+    departure_datetime = (datetime.now() + timedelta(days=1)).isoformat() + 'Z'
+    post_response = driver_post_future_rides(
+        client, driver_token, "34.052235,-118.243683", DEFAULT_RADIUS, "36.169941,-115.139832", DEFAULT_RADIUS,
+        departure_datetime, 2, "No notes"
+    )
+    assert post_response.status_code == SUCCESS_CODE
+    ride_id = post_response.get_json()["ride_id"]
+
+    # Passenger joins the ride requesting 2 seats
+    join_response = passanger_join_ride_request(client, passenger_token, ride_id, 2)
+    assert join_response.status_code == SUCCESS_CODE
+    join_data = join_response.get_json()
+    assert join_data["success"] is True
+
+def test_unauthorized_user_tries_to_join_ride(client):
+    # Register and login a driver and a passenger
+    driver_token, driver_id = register_and_login(client)
+    unauthorized_token = "Unauthorized"
+
+    # Post a future ride
+    departure_datetime = (datetime.now() + timedelta(days=1)).isoformat() + 'Z'
+    post_response = driver_post_future_rides(
+        client, driver_token, "34.052235,-118.243683", DEFAULT_RADIUS, "36.169941,-115.139832", DEFAULT_RADIUS,
+        departure_datetime, DEFAULT_AVAILABLE_SEATS, "No notes"
+    )
+    assert post_response.status_code == SUCCESS_CODE
+    ride_id = post_response.get_json()["ride_id"]
+
+    # Unauthorized user tries to join the ride
+    join_response = passanger_join_ride_request(client, unauthorized_token, ride_id, 1)
+    assert join_response.status_code == BAD_REQUEST_CODE  # Unauthorized
+
+

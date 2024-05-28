@@ -34,10 +34,9 @@ update_ride_model = driver_ns.model('UpdateRideModel', {"departure_location": fi
                                                         })
 
 
-ride_request_model = driver_ns.model('RideRequestModel', {'passenger_id': fields.Integer(required=True),
-                                                        'status': fields.String(required=True)
+ride_request_model = driver_ns.model('RideRequestModel', {'request_id': fields.Integer(required=True),
+                                                        'status_update': fields.String(required=True)
                                                         })
-
 
 """
     Flask-Restx routes
@@ -141,7 +140,7 @@ class ManagePassengerRequests(Resource):
             response = Response(success=False, message=str(e), status_code=500)
             return response.to_tuple()
 
-    @driver_ns.expect(ride_request_model)
+    @driver_ns.expect(ride_request_model, validate=True)
     @token_required
     def put(self, current_user, user_id, ride_id):
         """
