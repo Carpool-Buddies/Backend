@@ -6,6 +6,7 @@ from utils.auth_exceptions import *
 MIN_AGE = 16
 MAX_AGE = 120
 
+
 def validate_all(email=None, password=None, birthday=None, phone_number=None):
     if email:
         validate_email(email)
@@ -16,10 +17,12 @@ def validate_all(email=None, password=None, birthday=None, phone_number=None):
     if phone_number:
         validate_phone_number(phone_number)
 
+
 def validate_phone_number(phone_number):
     regex = re.compile(r'^(\+\d{1,3}[\s-]?)?((\d{3}[\s-]?)|(\d{2}[\s-]?\d{2}[\s-]?))\d{3}[\s-]?\d{4}$')
     if not regex.search(phone_number):
         raise PhoneNumberValidationError("Invalid phone number format.")
+
 
 def validate_password(password):
     """
@@ -32,7 +35,8 @@ def validate_password(password):
     # Combining all conditions into a single regular expression for efficiency
     regex = re.compile(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$')
     if not regex.search(password):
-        raise PasswordValidationError("Password must contain at least one uppercase letter, one lowercase letter and one digit.")
+        raise PasswordValidationError(
+            "Password must contain at least one uppercase letter, one lowercase letter and one digit.")
 
 
 def validate_email(email):
@@ -46,6 +50,7 @@ def validate_email(email):
     regex = r'^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$'
     if not re.match(regex, email, re.I):
         raise EmailValidationError("Invalid email format.")
+
 
 def validate_birthday(birthday):
     """
@@ -67,4 +72,3 @@ def validate_birthday(birthday):
 
     except ValueError:
         raise InvalidBirthdayError("Invalid birthday date. Please use the YYYY-MM-DD format.")
-

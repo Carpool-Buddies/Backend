@@ -53,6 +53,7 @@ class FutureRidePost:
             notes=self.notes
         )
         new_ride.save()
+        return new_ride
 
     def to_response(self):
         return {

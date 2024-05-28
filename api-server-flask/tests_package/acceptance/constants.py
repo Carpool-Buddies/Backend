@@ -5,9 +5,19 @@ FIRST_NAME = "John"
 LAST_NAME = "Doe"
 VALID_BIRTHDAY = "1990-01-01"
 
+VALID_EMAIL2 = "user2@example.co.il"
+VALID_PASSWORD2 = "ValidPassword12!"
+VALID_PHONE_NUMBER2 = "0528525835"
+FIRST_NAME2 = "John"
+LAST_NAME2 = "Doe"
+VALID_BIRTHDAY2 = "1999-01-01"
+
+
+
 SUCCESS_CODE = 200
 BAD_REQUEST_CODE = 400
 UNAUTHORIZED_CODE = 403
+NOT_FOUND = 404
 USER_REGISTRATION_SUCCESS_MESSAGE = "User registered successfully"
 USER_REGISTRATION_INVALID_EMAIL_MESSAGE = "Invalid email format"
 USER_REGISTRATION_INVALID_PASSWORD_MESSAGE = "Password must contain at least one uppercase letter, one lowercase letter and one digit."
@@ -30,3 +40,13 @@ DEFAULT_RADIUS = 10
 
 RIDE_POSTED_SUCCESSFULLY = "Ride posted successfully"
 DEPARTURE_DATETIME_KEY = "departure_datetime"
+
+
+#constance for passenger join ride request
+
+YOU_CREATED_RIDE_ERROR = "You cannot join the ride you created"
+MORE_SEATS_THAN_POSSIBLE = "No available seats"
+SEATS_AMOUNT_NOT_GOOD = "The request must have more than one seat"
+SUCCESS_JOIN_RIDE_REQUEST = "Request to join ride successful"
+ENTER_TWICE_REQUEST = "Cannot send another join request to the same ride"
+RIDE_NOT_FOUND = "404 Not Found"

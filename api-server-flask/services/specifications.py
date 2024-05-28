@@ -15,6 +15,7 @@ class Specification:
     def apply(self, query: Query):
         raise NotImplementedError
 
+
 class AndSpecification(Specification):
     def __init__(self, *specifications):
         self.specifications = specifications
@@ -27,6 +28,7 @@ class AndSpecification(Specification):
             query = spec.apply(query)
         return query
 
+
 class AvailableSeatsSpecification(Specification):
     def __init__(self, available_seats: int):
         self.available_seats = available_seats
@@ -36,6 +38,7 @@ class AvailableSeatsSpecification(Specification):
 
     def apply(self, query: Query):
         return query.filter(Rides.available_seats >= self.available_seats)
+
 
 # TODO: Try to do this in query
 class DepartureLocationSpecification(Specification):
@@ -75,6 +78,7 @@ class DepartureLocationSpecification(Specification):
             func.ST_Distance(departure_location_point, point) <= self.pickup_radius * 1000
         )
 
+
 # TODO: Try to do this in query
 class DestinationLocationSpecification(Specification):
     def __init__(self, destination: str, drop_radius: float):
@@ -100,6 +104,7 @@ class DestinationLocationSpecification(Specification):
             )
         )
 
+
 class DepartureDateSpecification(Specification):
     def __init__(self, departure_datetime: datetime, delta_hours: int = 5):
         self.departure_datetime = departure_datetime
@@ -119,6 +124,7 @@ class DepartureDateSpecification(Specification):
             Rides.departure_datetime.between(lower_bound, upper_bound)
         )
 
+
 class RideStatusSpecification(Specification):
     def __init__(self, status: str = 'waiting'):
         self.status = status
@@ -128,6 +134,7 @@ class RideStatusSpecification(Specification):
 
     def apply(self, query: Query):
         return query.filter(Rides.status == self.status)
+
 
 class NotMyRideSpecification(Specification):
     def __init__(self, user_id: int):

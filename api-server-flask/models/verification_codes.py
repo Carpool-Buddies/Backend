@@ -7,8 +7,12 @@ from utils.auth_exceptions import *
 
 
 def time_left(date1, date2):
-    new_date = date1
-    difference = date2 - new_date
+    timezone = pytz.timezone('Asia/Jerusalem')
+    if date1.tzinfo is None:
+        date1 = timezone.localize(date1)
+    if date2.tzinfo is None:
+        date2 = timezone.localize(date2)
+    difference = date2 - date1
     minute = timedelta(minutes=3)
     return difference <= minute
 
@@ -26,7 +30,6 @@ class VerificationCodes(db.Model):
         db.session.delete(self)
         db.session.commit()
 
-
     @staticmethod
     def send_code(_verification_code):
         _verification_code.hash_code()
@@ -43,14 +46,14 @@ class VerificationCodes(db.Model):
         if user_code:
             is_correct_code = user_code.check_code(_code)
             if not is_correct_code:
-                raise Exception("Code is incorrect",401)
+                raise Exception("Code is incorrect", 401)
             user_code.remove()
             in_time = time_left(user_code.date_send, datetime.now())
             if not in_time:
-                raise Exception("The code is expired",403)
+                raise Exception("The code is expired", 403)
             return True
         else:
-            raise Exception("User is not exist",404)
+            raise Exception("User is not exist", 404)
 
     def update_field(self, field, value):
         if hasattr(self, field):
