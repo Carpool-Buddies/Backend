@@ -26,18 +26,18 @@ class Users(db.Model):
         db.session.commit()
 
     @staticmethod
-    def register_user(user):
-        if Users.get_by_email(user.email):
-            raise EmailAlreadyExistsError(user.email)
+    def register_user(_email, _password, _first_name, _last_name, _phone_number, _birthday):
+        if Users.get_by_email(_email):
+            raise EmailAlreadyExistsError(_email)
 
         new_user = Users(
-            email=user.email,
-            first_name=user.first_name,
-            last_name=user.last_name,
-            phone_number=user.phone_number,
-            birthday=datetime.strptime(user.birthday, "%Y-%m-%d")
+            email=_email,
+            first_name=_first_name,
+            last_name=_last_name,
+            phone_number=_phone_number,
+            birthday=datetime.strptime(_birthday, "%Y-%m-%d")
         )
-        new_user.set_password(user.password)
+        new_user.set_password(_password)
         new_user.save()
 
         return new_user
@@ -81,3 +81,53 @@ class Users(db.Model):
 
     def toJSON(self):
         return self.toDICT()
+
+    def update_user_details(self, new_details):
+        """
+        Updates the user details with new information.
+
+        Parameters:
+        - new_details: dict, a dictionary containing the updated details for the user
+
+        Raises:
+        - Exception: If an error occurs during the update process
+        """
+        try:
+            for key, value in new_details.items():
+                if key == "password":
+                    self.set_password(value)
+                elif key == "birthday":
+                    # Convert the birthday to a date object
+                    value = value.date()
+                    setattr(self, key, value)
+                else:
+                    setattr(self, key, value)
+            self.save()
+        except Exception as e:
+            print(f"Error updating user details: {str(e)}")
+            db.session.rollback()
+            raise Exception("Failed to update user details") from e
+
+    # def update_user_details(self, new_details):
+    #     """
+    #     Updates the user details with new information.
+    #
+    #     Parameters:
+    #     - new_details: dict, a dictionary containing the updated details for the user
+    #
+    #     Raises:
+    #     - Exception: If an error occurs during the update process
+    #     """
+    #     try:
+    #         for key, value in new_details.items():
+    #             if key == "password":
+    #                 self.set_password(value)
+    #             # if key == "birthday":
+    #             #     value = datetime.strptime(value, '%Y-%m-%d')
+    #             else:
+    #                 setattr(self, key, value)
+    #         self.save()
+    #     except Exception as e:
+    #         print(f"Error updating user details: {str(e)}")
+    #         db.session.rollback()
+    #         raise Exception("Failed to update user details") from e

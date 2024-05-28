@@ -45,6 +45,15 @@ def login_user(client, email=VALID_EMAIL, password=VALID_PASSWORD):
     return response
 
 
+def register_and_login(client, email=VALID_EMAIL, password=VALID_PASSWORD, first_name=FIRST_NAME, last_name=LAST_NAME, phone_number=VALID_PHONE_NUMBER, birthday=VALID_BIRTHDAY):
+    register_user(client, email, password, first_name, last_name, phone_number, birthday)
+    login_response = login_user(client, email, password)
+    login_response_data = json.loads(login_response.data.decode())
+    token = login_response_data["token"]
+    user_id = login_response_data["user"]["_id"]
+    return token, user_id
+
+
 def logout_user(client, token):
     headers = {"Authorization": f"{token}"}
     response = client.post(
@@ -54,17 +63,34 @@ def logout_user(client, token):
     return response
 
 
-def edit_user(client, token, first_name=FIRST_NAME, last_name=LAST_NAME, birthday=VALID_BIRTHDAY):
+
+def update_user_details(client, token, password=None, first_name=None, last_name=None, phone_number=None,
+                        birthday=None):
+
     headers = {"Authorization": f"{token}"}
-    response = client.post("api/auth/edit", json={
+    user_details = {
+        "password": password,
         "first_name": first_name,
         "last_name": last_name,
+        "phone_number": phone_number,
         "birthday": birthday
-    },
-                           headers=headers,
+
+    }
+    # Filter out None values
+    user_details = {k: v for k, v in user_details.items() if v is not None}
+
+    response = client.post("/api/auth/update-user-details", json=user_details, headers=headers,
+
                            content_type="application/json")
     return response
 
+def register_and_login(client, email=VALID_EMAIL, password=VALID_PASSWORD, first_name=FIRST_NAME, last_name=LAST_NAME, phone_number=VALID_PHONE_NUMBER, birthday=VALID_BIRTHDAY):
+    register_user(client, email, password, first_name, last_name, phone_number, birthday)
+    login_response = login_user(client, email, password)
+    login_response_data = json.loads(login_response.data.decode())
+    token = login_response_data["token"]
+    user_id = login_response_data["user"]["_id"]
+    return token, user_id
 
 # -----------------------------------------------------------
 #                           Register
@@ -92,9 +118,9 @@ def test_GivenValidUserData_thenSignUp_returnSuccessCodeAndMsg(email, password, 
     # Multiple '@' symbols
     ("user1@@example.com", "ValidPassword1!", "John", "Doe", "1234567890", "1990-01-01"),
     # Leading whitespace
-    (" user1@example.com", "ValidPassword1!", "John", "Doe", "1234567890", "1990-01-01"),
+    (" @example.com", "ValidPassword1!", "John", "Doe", "1234567890", "1990-01-01"),
     # Trailing whitespace
-    ("user1@example.com ", "ValidPassword1!", "John", "Doe", "1234567890", "1990-01-01"),
+    ("user1@ ", "ValidPassword1!", "John", "Doe", "1234567890", "1990-01-01"),
     # No top-level domain
     ("user1@example", "ValidPassword1!", "John", "Doe", "1234567890", "1990-01-01"),
     # Contains spaces
@@ -170,6 +196,29 @@ def test_login_user(client):
     assert response.status_code == SUCCESS_CODE
     assert "token" in response.get_json()
 
+def test_GivenRegisterUpperCaseEmail_thenLogin_SuccessAndReturnAppropriateCodeAndMsg(client):
+    register_user(client, email=VALID_EMAIL.upper())
+    response = login_user(client)
+    assert response.status_code == SUCCESS_CODE
+    assert "token" in response.get_json()
+
+def test_GivenRegisterSpacesCaseEmail_thenLogin_SuccessAndReturnAppropriateCodeAndMsg(client):
+    register_user(client, email=VALID_EMAIL + "   ")
+    response = login_user(client)
+    assert response.status_code == SUCCESS_CODE
+    assert "token" in response.get_json()
+
+def test_GivenLoginSpacesCaseEmail_thenLogin_SuccessAndReturnAppropriateCodeAndMsg(client):
+    register_user(client)
+    response = login_user(client, email=VALID_EMAIL + "   ")
+    assert response.status_code == SUCCESS_CODE
+    assert "token" in response.get_json()
+def test_GivenLoginUpperCaseEmail_thenLogin_SuccessAndReturnAppropriateCodeAndMsg(client):
+    register_user(client)
+    response = login_user(client, email=VALID_EMAIL.upper())
+    assert response.status_code == SUCCESS_CODE
+    assert "token" in response.get_json()
+
 
 def test_GivenUnexitstsUser_thenLogin_returnAppropriateCodeAndMsg(client):
     response = login_user(client)
@@ -204,10 +253,72 @@ def test_GivenNoLoggedInUser_thenLogout_returnAppropriateCodeAndMsg(client):
 
 
 # -----------------------------------------------------------
-#                          Edit User
+#                          Update User Details
 # -----------------------------------------------------------
-def test_GivenLoggedInUser_thenEdit_returnAppropriateCodeAndMsg(client):
-    register_user(client)
+def test_update_user_details_success(client):
+    token, user_id = register_and_login(client)
+    new_details = {
+        'first_name': 'Updated',
+        'last_name': 'Name',
+        'phone_number': '987-654-3210',
+        'birthday': '1990-01-01'
+    }
+    response = update_user_details(client, token, **new_details)
+    assert response.status_code == SUCCESS_CODE
+    response_data = json.loads(response.data)
+    assert response_data['msg'] == 'User details updated successfully'
+
+def test_update_user_password_success(client):
+    token, user_id = register_and_login(client)
+    new_details = {
+        'password': VALID_PASSWORD + "1"
+    }
+    response = update_user_details(client, token, **new_details)
+    assert response.status_code == SUCCESS_CODE
+    response_data = json.loads(response.data)
+    assert response_data['msg'] == 'User details updated successfully'
     response = login_user(client)
-    # data = json.loads(response.data.decode())
-    # TODO: Implement the test
+    assert response.status_code == BAD_REQUEST_CODE
+    response = login_user(client, password=VALID_PASSWORD + "1")
+    assert response.status_code == SUCCESS_CODE
+
+def test_update_user_details_phone_number_validation_error(client):
+    token, user_id = register_and_login(client)
+    new_details = {
+        'phone_number': 'invalid-phone'
+    }
+    response = update_user_details(client, token, **new_details)
+    assert response.status_code == BAD_REQUEST_CODE
+    response_data = json.loads(response.data)
+    assert 'Validation error' in response_data['msg']
+
+def test_update_user_details_birthday_validation_error(client):
+    token, user_id = register_and_login(client)
+    new_details = {
+        'birthday': '2020-10-10'
+    }
+    response = update_user_details(client, token, **new_details)
+    assert response.status_code == BAD_REQUEST_CODE
+    response_data = json.loads(response.data)
+    assert 'Validation error' in response_data['msg']
+
+def test_update_user_details_birthday_password_validation_error(client):
+    token, user_id = register_and_login(client)
+    new_details = {
+        'password': '2020-10-10'
+    }
+    response = update_user_details(client, token, **new_details)
+    assert response.status_code == BAD_REQUEST_CODE
+    response_data = json.loads(response.data)
+    assert 'Validation error' in response_data['msg']
+
+def test_update_user_details_unauthorized(client):
+    new_details = {
+        'first_name': 'Updated',
+        'last_name': 'Name'
+    }
+    response = client.post("/api/auth/update-user-details", json=new_details, content_type="application/json")
+    assert response.status_code == BAD_REQUEST_CODE
+    response_data = json.loads(response.data)
+    assert response_data['msg'] == UNAUTHORIZED_ERROR
+

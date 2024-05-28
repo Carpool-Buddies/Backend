@@ -49,7 +49,7 @@ passenger_search_rides = passenger_ns.model('SearchRides', {
     "pickup_radius": fields.Float(required=False),
     "destination": fields.String(required=False),
     "drop_radius": fields.Float(required=False),
-    "departure_date": fields.DateTime(required=False),
+    "departure_datetime": fields.DateTime(required=False),
     "available_seats": fields.Integer(required=False),
     "delta_hours": fields.Integer(required=False, default=5)
 })
@@ -180,7 +180,8 @@ class SearchRides(Resource):
 
         # Parse departure_date as datetime
         if departure_date_str:
-            departure_date = datetime.fromisoformat(departure_date_str)
+            # departure_date = datetime.fromisoformat(departure_date_str)
+            departure_date = datetime.strptime(departure_date_str, '%Y-%m-%dT%H:%M:%S.%fZ')
         else:
             departure_date = datetime.now()
 

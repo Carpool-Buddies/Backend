@@ -1,10 +1,8 @@
 import random
 
-import pytz
-import re
 from api.config import BaseConfig
 from services import login_attempt_tracker
-from services.user import User
+from services.user_validation import *
 from utils.response import Response
 
 from utils.auth_exceptions import *
@@ -15,7 +13,7 @@ from datetime import datetime, timedelta, timezone
 
 import jwt
 
-from models import Users, JWTTokenBlocklist
+from models import Users, JWTTokenBlocklist, db
 from models.verification_codes import VerificationCodes, time_left
 import os
 
@@ -42,6 +40,7 @@ def send_verification_mail(_receiver, _code):
     msg.set_content("your verification code is: " + str(_code))
     msg['subject'] = subject
     msg['to'] = _receiver
+    msg['From'] = email
     server = smtplib.SMTP("smtp.gmail.com", 587)
     server.starttls()
     server.login(email, os.environ.get("email_server_password"))
@@ -58,11 +57,10 @@ class AuthService:
     def register_user(email, password, first_name, last_name, phone_number, birthday):
         try:
             # Create and validate the user
-            user = User(email, password, first_name, last_name, phone_number, birthday)
-            user.validate()
+            validate_all(email=email, password=password, birthday=birthday, phone_number=phone_number)
 
             # Register the user and return a success response
-            user = Users.register_user(user)
+            user = Users.register_user(email, password, first_name, last_name, phone_number, birthday)
             response = Response(success=True, message="User registered successfully", status_code=200,
                                 data={"userID": user.id})
             return response.to_tuple()
@@ -185,25 +183,6 @@ class AuthService:
         return response.to_tuple()
 
     @staticmethod
-    def edit_user(current_user, _new_first_name, _new_last_name, _new_phone_number, _new_birthday):
-        user_exists = User(current_user.email, current_user.password, current_user.first_name, current_user.last_name,
-                           current_user.phone_number, current_user.birthday, current_user)
-        if _new_first_name:
-            user_exists.update_first_name(_new_first_name)
-
-        if _new_last_name:
-            user_exists.update_last_name(_new_last_name)
-
-        if _new_phone_number:
-            user_exists.update_phone_number(_new_phone_number)
-
-        if _new_birthday:
-            user_exists.update_birthday(_new_birthday)
-
-        response = Response(success=True, message="User updated successfully", status_code=200)
-        return response.to_tuple()
-
-    @staticmethod
     def forget_password(verify_user, password, confirmPassword):
         """
         change the password of a user only if the system verified this user
@@ -236,3 +215,42 @@ class AuthService:
                     "msg": "password change successfully"}, 200
         return {"success": False,
                 "msg": "password do not match"}, 400
+
+    @staticmethod
+    def update_user_details(user_id, new_details):
+        """
+        Updates details for a specific user with restrictions.
+
+        Parameters:
+        - user_id: int, the ID of the user to be updated
+        - new_details: dict, a dictionary containing the updated details for the user
+
+        Returns:
+        - response: tuple, a response object containing success status and message
+        """
+        try:
+            # Retrieve the user by its ID
+            user = Users.get_by_id(user_id)
+
+            # Validate the  fields
+            if "password" in new_details.keys():
+                validate_password(new_details["password"])
+            if "phone_number" in new_details.keys():
+                validate_phone_number(new_details["phone_number"])
+            if "birthday" in new_details.keys():
+                validate_birthday(new_details["birthday"])  # Validate birthday
+                new_details["birthday"] = datetime.strptime(new_details["birthday"], '%Y-%m-%d')
+            # Update the fields
+            user.update_user_details(new_details)
+            response = Response(success=True, message="User details updated successfully", status_code=200)
+            return response.to_tuple()
+        except (PhoneNumberValidationError, PasswordValidationError, InvalidBirthdayError) as ve:
+            # Handle validation errors
+            response = Response(success=False, message=f"Validation error: {str(ve)}", status_code=400)
+            return response.to_tuple()
+        except Exception as e:
+            # Handle other exceptions, log errors, etc.
+            print(f"Error updating user details: {str(e)}")
+            response = Response(success=False, message="Error updating user details", status_code=500)
+            return response.to_tuple()
+
