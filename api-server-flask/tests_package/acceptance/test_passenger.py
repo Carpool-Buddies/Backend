@@ -71,6 +71,7 @@ def driver_post_future_rides(
     )
     return response
 
+
 def logout_user(client, token):
     headers = {"Authorization": f"{token}"}
     response = client.post(
@@ -81,7 +82,7 @@ def logout_user(client, token):
 
 
 def start_init_data(client):
-    register_user(client, VALID_EMAIL2, VALID_PASSWORD2, FIRST_NAME2, LAST_NAME2, VALID_PHONE_NUMBER2,VALID_BIRTHDAY2)
+    register_user(client, VALID_EMAIL2, VALID_PASSWORD2, FIRST_NAME2, LAST_NAME2, VALID_PHONE_NUMBER2, VALID_BIRTHDAY2)
     register_user(client)
     response = login_user(client)
     token1 = json.loads(response.data.decode())["token"]
@@ -125,8 +126,8 @@ def test_GivenSameUserRequestWhenJoinRideRequestExpectFail(departure_location, p
         ("Residential Block", 10, "University", 10, "2024-09-05T08:00:00.000Z", 4, "Students only.")
     ])
 def test_GivenLargeNumberOfSeatsWhenJoinRideRequestExpectFail(departure_location, pickup_radius, destination,
-                                                           drop_radius,
-                                                           departure_datetime, available_seats, notes, client):
+                                                              drop_radius,
+                                                              departure_datetime, available_seats, notes, client):
     register_user(client)
     register_user(client, VALID_EMAIL2, VALID_PASSWORD2, FIRST_NAME2, LAST_NAME2, VALID_PHONE_NUMBER2, VALID_BIRTHDAY2)
     response = login_user(client)
@@ -134,27 +135,27 @@ def test_GivenLargeNumberOfSeatsWhenJoinRideRequestExpectFail(departure_location
     response = driver_post_future_rides(client, token, departure_location, pickup_radius, destination, drop_radius,
                                         departure_datetime, available_seats, notes)
     ride_id = json.loads(response.data.decode())["ride_id"]
-    logout_user(client,token)
-    response = login_user(client,VALID_EMAIL2,VALID_PASSWORD2)
+    logout_user(client, token)
+    response = login_user(client, VALID_EMAIL2, VALID_PASSWORD2)
     token = json.loads(response.data.decode())["token"]
-    response = join_ride_request(client,token,ride_id,10)
+    response = join_ride_request(client, token, ride_id, 10)
     assert response.status_code == BAD_REQUEST_CODE
     assert MORE_SEATS_THAN_POSSIBLE in response.get_json().get('msg')
 
 
-
 @pytest.mark.parametrize(
     "departure_location, pickup_radius, destination, drop_radius, departure_datetime, available_seats, notes, seats", [
         # Valid ride details
-        ("Main Street", 10, "Market Square", 10, "2024-06-15T15:00:00.000Z", 4, "Pick up near the cafe.",-1),
-        ("Downtown", 15, "Central Park", 15, "2024-06-20T09:30:00.000Z", 3, "Please arrive 5 minutes early.",0),
-        ("Suburb", 5, "Local Mall", 5, "2024-07-01T12:00:00.000Z", 2, "Contact on arrival.",-5),
-        ("Office Area", 20, "Airport", 20, "2024-08-10T07:00:00.000Z", 6, "Extra space for luggage.",-8),
-        ("Residential Block", 10, "University", 10, "2024-09-05T08:00:00.000Z", 4, "Students only.",0)
+        ("Main Street", 10, "Market Square", 10, "2024-06-15T15:00:00.000Z", 4, "Pick up near the cafe.", -1),
+        ("Downtown", 15, "Central Park", 15, "2024-06-20T09:30:00.000Z", 3, "Please arrive 5 minutes early.", 0),
+        ("Suburb", 5, "Local Mall", 5, "2024-07-01T12:00:00.000Z", 2, "Contact on arrival.", -5),
+        ("Office Area", 20, "Airport", 20, "2024-08-10T07:00:00.000Z", 6, "Extra space for luggage.", -8),
+        ("Residential Block", 10, "University", 10, "2024-09-05T08:00:00.000Z", 4, "Students only.", 0)
     ])
 def test_GivenZeroOrNegativeNumberOfSeatsWhenJoinRideRequestExpectFail(departure_location, pickup_radius, destination,
-                                                           drop_radius,
-                                                           departure_datetime, available_seats, notes, seats,client):
+                                                                       drop_radius,
+                                                                       departure_datetime, available_seats, notes,
+                                                                       seats, client):
     register_user(client)
     register_user(client, VALID_EMAIL2, VALID_PASSWORD2, FIRST_NAME2, LAST_NAME2, VALID_PHONE_NUMBER2, VALID_BIRTHDAY2)
     response = login_user(client)
@@ -162,27 +163,26 @@ def test_GivenZeroOrNegativeNumberOfSeatsWhenJoinRideRequestExpectFail(departure
     response = driver_post_future_rides(client, token, departure_location, pickup_radius, destination, drop_radius,
                                         departure_datetime, available_seats, notes)
     ride_id = json.loads(response.data.decode())["ride_id"]
-    logout_user(client,token)
-    response = login_user(client,VALID_EMAIL2,VALID_PASSWORD2)
+    logout_user(client, token)
+    response = login_user(client, VALID_EMAIL2, VALID_PASSWORD2)
     token = json.loads(response.data.decode())["token"]
-    response = join_ride_request(client,token,ride_id,seats)
+    response = join_ride_request(client, token, ride_id, seats)
     assert response.status_code == BAD_REQUEST_CODE
     assert SEATS_AMOUNT_NOT_GOOD in response.get_json().get('msg')
 
 
-
 @pytest.mark.parametrize(
     "departure_location, pickup_radius, destination, drop_radius, departure_datetime, available_seats, notes, seats", [
         # Valid ride details
-        ("Main Street", 10, "Market Square", 10, "2024-06-15T15:00:00.000Z", 4, "Pick up near the cafe.",3),
-        ("Downtown", 15, "Central Park", 15, "2024-06-20T09:30:00.000Z", 3, "Please arrive 5 minutes early.",1),
-        ("Suburb", 5, "Local Mall", 5, "2024-07-01T12:00:00.000Z", 2, "Contact on arrival.",2),
-        ("Office Area", 20, "Airport", 20, "2024-08-10T07:00:00.000Z", 6, "Extra space for luggage.",5),
-        ("Residential Block", 10, "University", 10, "2024-09-05T08:00:00.000Z", 4, "Students only.",2)
+        ("Main Street", 10, "Market Square", 10, "2024-06-15T15:00:00.000Z", 4, "Pick up near the cafe.", 3),
+        ("Downtown", 15, "Central Park", 15, "2024-06-20T09:30:00.000Z", 3, "Please arrive 5 minutes early.", 1),
+        ("Suburb", 5, "Local Mall", 5, "2024-07-01T12:00:00.000Z", 2, "Contact on arrival.", 2),
+        ("Office Area", 20, "Airport", 20, "2024-08-10T07:00:00.000Z", 6, "Extra space for luggage.", 5),
+        ("Residential Block", 10, "University", 10, "2024-09-05T08:00:00.000Z", 4, "Students only.", 2)
     ])
 def test_GivenGoodDataWhenJoinRideRequestExpectSuccess(departure_location, pickup_radius, destination,
-                                                           drop_radius,
-                                                           departure_datetime, available_seats, notes, seats,client):
+                                                       drop_radius,
+                                                       departure_datetime, available_seats, notes, seats, client):
     register_user(client)
     register_user(client, VALID_EMAIL2, VALID_PASSWORD2, FIRST_NAME2, LAST_NAME2, VALID_PHONE_NUMBER2, VALID_BIRTHDAY2)
     response = login_user(client)
@@ -190,10 +190,68 @@ def test_GivenGoodDataWhenJoinRideRequestExpectSuccess(departure_location, picku
     response = driver_post_future_rides(client, token, departure_location, pickup_radius, destination, drop_radius,
                                         departure_datetime, available_seats, notes)
     ride_id = json.loads(response.data.decode())["ride_id"]
-    logout_user(client,token)
-    response = login_user(client,VALID_EMAIL2,VALID_PASSWORD2)
+    logout_user(client, token)
+    response = login_user(client, VALID_EMAIL2, VALID_PASSWORD2)
     token = json.loads(response.data.decode())["token"]
-    response = join_ride_request(client,token,ride_id,seats)
+    response = join_ride_request(client, token, ride_id, seats)
     assert response.status_code == SUCCESS_CODE
     assert SUCCESS_JOIN_RIDE_REQUEST in response.get_json().get('msg')
 
+
+@pytest.mark.parametrize(
+    "departure_location, pickup_radius, destination, drop_radius, departure_datetime, available_seats, notes, seats", [
+        # Valid ride details
+        ("Main Street", 10, "Market Square", 10, "2024-06-15T15:00:00.000Z", 4, "Pick up near the cafe.", 3),
+        ("Downtown", 15, "Central Park", 15, "2024-06-20T09:30:00.000Z", 3, "Please arrive 5 minutes early.", 1),
+        ("Suburb", 5, "Local Mall", 5, "2024-07-01T12:00:00.000Z", 2, "Contact on arrival.", 2),
+        ("Office Area", 20, "Airport", 20, "2024-08-10T07:00:00.000Z", 6, "Extra space for luggage.", 5),
+        ("Residential Block", 10, "University", 10, "2024-09-05T08:00:00.000Z", 4, "Students only.", 2)
+    ])
+def test_GivenGoodDataWhenJoinRideRequestTwiceExpectFail(departure_location, pickup_radius, destination,
+                                                         drop_radius,
+                                                         departure_datetime, available_seats, notes, seats, client):
+    register_user(client)
+    register_user(client, VALID_EMAIL2, VALID_PASSWORD2, FIRST_NAME2, LAST_NAME2, VALID_PHONE_NUMBER2, VALID_BIRTHDAY2)
+    response = login_user(client)
+    token = json.loads(response.data.decode())["token"]
+    response = driver_post_future_rides(client, token, departure_location, pickup_radius, destination, drop_radius,
+                                        departure_datetime, available_seats, notes)
+    ride_id = json.loads(response.data.decode())["ride_id"]
+    logout_user(client, token)
+    response = login_user(client, VALID_EMAIL2, VALID_PASSWORD2)
+    token = json.loads(response.data.decode())["token"]
+    join_ride_request(client, token, ride_id, seats)
+    response = join_ride_request(client, token, ride_id, seats)
+    assert response.status_code == BAD_REQUEST_CODE
+    assert ENTER_TWICE_REQUEST in response.get_json().get('msg')
+
+
+@pytest.mark.parametrize(
+    "departure_location, pickup_radius, destination, drop_radius, departure_datetime, available_seats, notes, seats", [
+        # Valid ride details
+        ("Main Street", 10, "Market Square", 10, "2024-06-15T15:00:00.000Z", 4, "Pick up near the cafe.", 3),
+        ("Downtown", 15, "Central Park", 15, "2024-06-20T09:30:00.000Z", 3, "Please arrive 5 minutes early.", 1),
+        ("Suburb", 5, "Local Mall", 5, "2024-07-01T12:00:00.000Z", 2, "Contact on arrival.", 2),
+        ("Office Area", 20, "Airport", 20, "2024-08-10T07:00:00.000Z", 6, "Extra space for luggage.", 5),
+        ("Residential Block", 10, "University", 10, "2024-09-05T08:00:00.000Z", 4, "Students only.", 2),
+        ("Residential Block", 10, "University", 10, "2024-09-05T08:00:00.000Z", -1, "Students only.", 2)
+    ])
+def test_GivenInvalidRideIdWhenJoinRideRequestExpectFail(departure_location, pickup_radius, destination,
+                                                         drop_radius,
+                                                         departure_datetime, available_seats, notes, seats, client):
+    register_user(client)
+    register_user(client, VALID_EMAIL2, VALID_PASSWORD2, FIRST_NAME2, LAST_NAME2, VALID_PHONE_NUMBER2, VALID_BIRTHDAY2)
+    response = login_user(client)
+    token = json.loads(response.data.decode())["token"]
+    try:
+        response = driver_post_future_rides(client, token, departure_location, pickup_radius, destination, drop_radius,
+                                            departure_datetime, available_seats, notes)
+        ride_id = json.loads(response.data.decode())["ride_id"]
+    except Exception as e:
+        ride_id = 0
+    logout_user(client, token)
+    response = login_user(client, VALID_EMAIL2, VALID_PASSWORD2)
+    token = json.loads(response.data.decode())["token"]
+    response = join_ride_request(client, token, ride_id + 1, seats)
+    assert response.status_code == BAD_REQUEST_CODE
+    assert RIDE_NOT_FOUND in response.get_json().get('msg')

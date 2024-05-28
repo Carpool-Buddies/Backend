@@ -4,7 +4,7 @@ from services.specifications import *
 from utils.response import Response
 
 from geopy.distance import geodesic
-
+from sqlalchemy.exc import IntegrityError
 
 class PassengerService:
     @staticmethod
@@ -104,6 +104,10 @@ class PassengerService:
 
             response = Response(success=True, message="Request to join ride successful", status_code=200)
             return response.to_tuple()
+        except IntegrityError as e:
+            response = Response(success=False, message=f"Error joining ride: Cannot send another join request to the same ride", status_code=400)
+            return response.to_tuple()
+
         except Exception as e:
             response = Response(success=False, message=f"Error joining ride: {str(e)}", status_code=400)
             return response.to_tuple()
