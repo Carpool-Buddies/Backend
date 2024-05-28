@@ -175,8 +175,8 @@ class DriverService:
                 ride = Rides.query.get_or_404(ride_id)
 
                 # Check if the user is the driver of the ride
-                if ride.driver_id == current_user.id:
-                    raise ValueError("Cannot manage ride request: the driver cannot accept or reject their own request")
+                if ride.driver_id != current_user.id:
+                    raise ValueError("Cannot manage ride request: Only the driver of the ride can accept or reject requests.")
 
                 # Check if the ride is in a waiting state and the departure time has not passed
                 if ride.status != 'waiting':
@@ -243,7 +243,7 @@ class DriverService:
             pending_requests = JoinRideRequests.query.filter_by(ride_id=ride_id, status='pending').all()
             pending_requests_dicts = [request.to_dict() for request in pending_requests]
             response = Response(success=True, message="Pending join requests retrieved successfully", status_code=200,
-                                data=pending_requests_dicts)
+                                data={"pending_requests": pending_requests_dicts})
             return response.to_tuple()
         except Exception as e:
             print(f"Error retrieving pending requests: {str(e)}")

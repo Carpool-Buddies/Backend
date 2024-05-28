@@ -42,6 +42,26 @@ def getRides(client, token, user_id, date):
     )
     return response
 
+def passanger_join_ride_request(client, token, ride_id, requested_seats=1):
+    """
+    Helper function to join a ride.
+
+    Parameters:
+    - client: The test client to make requests
+    - token: The JWT token for authentication
+    - ride_id: The ID of the ride to join
+    - requested_seats: The number of seats requested by the passenger
+
+    Returns:
+    - response: The response object from the post request
+    """
+    response = client.post(
+        f"/api/passengers/rides/{ride_id}/join-ride",
+        data=json.dumps({"ride_id": ride_id, "requested_seats": requested_seats}),
+        headers={'Content-Type': 'application/json', 'accept': 'application/json', "Authorization": f"{token}"}
+    )
+    return response
+
 
 def driver_post_future_rides(
         client,
