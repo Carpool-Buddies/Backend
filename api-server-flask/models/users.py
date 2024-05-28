@@ -15,7 +15,7 @@ class Users(db.Model):
     phone_number = db.Column(db.String(32), nullable=False)
     birthday = db.Column(db.Date, nullable=False)
     jwt_auth_active = db.Column(db.Boolean())
-    approved = db.Column(db.Boolean())
+    approved = db.Column(db.Boolean(), default=False) #TODO: Change this to date and reapproved evrey year
     date_joined = db.Column(db.DateTime(), default=datetime.now())
 
     def __repr__(self):
@@ -81,6 +81,14 @@ class Users(db.Model):
 
     def toJSON(self):
         return self.toDICT()
+
+    def to_profile(self):
+        return {"id": self.id,
+                "first_name": self.first_name,
+                "last_name": self.last_name,
+                "phone_number": self.phone_number,
+                "approved": self.approved
+                }
 
     def update_user_details(self, new_details):
         """
