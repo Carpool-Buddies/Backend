@@ -89,7 +89,8 @@ class Rides(db.Model):
             '_available_seats': self.available_seats,
             '_confirmed_passengers': self.confirmed_passengers,
             '_notes': self.notes,
-            '_created_at': self.created_at.isoformat()
+            '_created_at': self.created_at.isoformat(),
+            '_status': self.status
         }
         return ride_dict
 
