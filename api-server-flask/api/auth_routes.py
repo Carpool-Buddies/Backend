@@ -43,7 +43,6 @@ update_user_details_model = auth_ns.model('UserEdit', {
     'birthday': fields.Date(required=False, description='New birthday in YYYY-MM-DD format')
 })
 
-
 get_code_model = auth_ns.model('GetCodeModel', {"email": fields.String(required=True, min_length=1, max_length=32)})
 enter_code_model = auth_ns.model('EnterCodeModel', {"code": fields.String(required=True, min_length=1, max_length=32)})
 
@@ -84,8 +83,26 @@ class GetCode(Resource):
         req_data = request.get_json()
         _email = req_data.get("email").lower().strip()
         resp = auth.getCode(_email)
-        if resp[0]['success']:
-            session["email"] = _email
+        if int(resp[1]) == 200:
+            session["email"] = resp[0]["email"]
+        return resp
+
+
+@auth_ns.doc(security='JWT Bearer')
+@auth_ns.route('/users/<int:user_id>/confirm')
+class ConfirmUser(Resource):
+    """
+       sending a verification code via email that the user has entered
+    """
+
+    @token_required
+    def get(self, current_user, user_id):
+        if current_user.id != user_id:
+            response = Response(success=False, message="Unauthorized access to user's confirmation", status_code=403)
+            return response.to_tuple()
+        resp = auth.getCode(_id=user_id)
+        if int(resp[1]) == 200:
+            session["email"] = resp[0]["email"]
         return resp
 
 
@@ -94,6 +111,7 @@ class EnterCode(Resource):
     """
        validated that the code that the user entered is correct in the time limit (3 minutes)
     """
+
     @auth_ns.expect(enter_code_model, validate=True)
     def post(self):
         req_data = request.get_json()
@@ -113,6 +131,7 @@ class ForgetPassword(Resource):
     """
        allow the user to change his password. require a verification process neet to be 3 minutes after the verification
     """
+
     @auth_ns.expect(forget_password_model, validate=True)
     def post(self):
         if "verify" not in session:
@@ -187,13 +206,13 @@ class UserDetails(Resource):
                 "first_name": first_name,
                 "last_name": last_name}, 200
 
+
 @auth_ns.doc(security='JWT Bearer')
 @auth_ns.route('/users/<int:user_id>/profile')
 class UserProfile(Resource):
     @token_required
     def get(self, current_user, user_id):
         return auth.get_user_profile(user_id)
-
 
 
 @auth_ns.doc(security='JWT Bearer')

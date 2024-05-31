@@ -78,7 +78,7 @@ class AuthService:
             return response.to_tuple()
 
     @staticmethod
-    def getCode(_email):
+    def getCode(_email=None, _id=None):
         """
         check there is user with email like the parameter and send code to this email.
 
@@ -88,21 +88,26 @@ class AuthService:
         Returns:
         - success message or error in case that no user hase found or sending the email failed
         """
-        user_exists = Users.get_by_email(_email)
+        if _email:
+            user_exists = Users.get_by_email(_email)
+        if _id:
+            user_exists = Users.get_by_id(_id)
+            _email = user_exists.email
 
         if not user_exists:
-            return {"success": False,
-                    "msg": "This email does not exist."}, 404
+            response = Response(success=False, message="This email does not exist.", status_code=404)
+            return response.to_tuple()
         try:
             code = random.randint(100000, 999999)
             verify = VerificationCodes(email=_email, code=code, date_send=datetime.now())
             VerificationCodes.send_code(verify)
             send_verification_mail(_email, code)
         except Exception as e:
-            return {"success": False,
-                    "msg": "Error in sending Email"}, 503
-        return {"success": True,
-                "msg": "code sent to " + str(_email)}, 200
+            response = Response(success=False, message="Error in sending Email", status_code=503)
+            return response.to_tuple()
+        response = Response(success=True, message="code sent to " + str(_email), status_code=200,
+                            data={"email": _email})
+        return response.to_tuple()
 
     @staticmethod
     def enterCode(_email, _code):
@@ -258,10 +263,9 @@ class AuthService:
         try:
             # Retrieve the user by its ID
             user = Users.get_by_id(user_id)
-            response = Response(success=True, message="Get user profile successfully", status_code=200, data={"profile": user.to_profile()})
+            response = Response(success=True, message="Get user profile successfully", status_code=200,
+                                data={"profile": user.to_profile()})
             return response.to_tuple()
         except Exception as e:
             response = Response(success=False, message="Error get user profile: " + str(e), status_code=500)
             return response.to_tuple()
-
-
