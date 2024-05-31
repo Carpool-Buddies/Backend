@@ -14,7 +14,7 @@ from services.user_validation import (
 
 # Tests for validate_email
 def test_validate_email_valid():
-    assert validate_email("valid@example.com") is None
+    assert validate_email("valid@post.bgu.ac.il") is None
 
 def test_validate_email_invalid():
     with pytest.raises(EmailValidationError):
