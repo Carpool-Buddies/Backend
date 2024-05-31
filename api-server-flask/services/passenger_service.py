@@ -6,6 +6,13 @@ from utils.response import Response
 from geopy.distance import geodesic
 from sqlalchemy.exc import IntegrityError
 
+
+def serializeResult(x):
+    result = x[0].to_dict()
+    result.update({'ride_status': x[1]})
+    return result
+
+
 class PassengerService:
     @staticmethod
     def makeRideOffer(_passenger_id, _departure_location, _pickup_radius, _destination, _drop_radius,
@@ -53,19 +60,6 @@ class PassengerService:
             return False
 
     @staticmethod
-    def get_rides(date):
-        date.replace(tzinfo=None)
-        window_start = date - timedelta(minutes=30)
-        window_end = date + timedelta(minutes=30)
-        now = datetime.now()
-        return Rides.query.filter(
-            Rides.departure_datetime > now,
-            Rides.departure_datetime.between(window_start, window_end),
-            Rides.available_seats > 1,
-            Rides.status == 'waiting'
-        ).all()
-
-    @staticmethod
     def join_ride_request(passenger_id, ride_id, requested_seats):
         """
         Allows a passenger to join a ride.
@@ -82,7 +76,7 @@ class PassengerService:
             # Retrieve the ride
             ride = Rides.query.get_or_404(ride_id)
 
-            if requested_seats<1:
+            if requested_seats < 1:
                 raise ValueError("The request must have more than one seat")
 
             if ride.driver_id == passenger_id:
@@ -98,14 +92,17 @@ class PassengerService:
                 passenger_id=passenger_id,
                 status='pending',
                 requested_seats=requested_seats,
-                created_at = datetime.now()
+                created_at=datetime.now()
             )
             join_request.save()
 
-            response = Response(success=True, message="Request to join ride successful", status_code=200)
+            response = Response(success=True, message="Request to join ride successful", status_code=200,
+                                data=join_request.to_dict())
             return response.to_tuple()
         except IntegrityError as e:
-            response = Response(success=False, message=f"Error joining ride: Cannot send another join request to the same ride", status_code=400)
+            response = Response(success=False,
+                                message=f"Error joining ride: Cannot send another join request to the same ride",
+                                status_code=400)
             return response.to_tuple()
 
         except Exception as e:
@@ -181,8 +178,8 @@ class PassengerService:
     def get_my_rides(user_id):
         try:
             results = db.session.query(Rides, JoinRideRequests.status).join(JoinRideRequests,
-                                                                            Rides.ride_id == JoinRideRequests.ride_id).filter(
+                                                                            Rides.id == JoinRideRequests.ride_id).filter(
                 JoinRideRequests.passenger_id == user_id).all()
-            return results
+            return [serializeResult(x) for x in results]
         except Exception as e:
             raise Exception("cannot get the rides", 404)

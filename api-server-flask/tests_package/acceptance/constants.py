@@ -12,6 +12,13 @@ FIRST_NAME2 = "John"
 LAST_NAME2 = "Doe"
 VALID_BIRTHDAY2 = "1999-01-01"
 
+VALID_EMAIL3 = "user3@example.co.il"
+VALID_PASSWORD3 = "ValidPassword13!"
+VALID_PHONE_NUMBER3 = "0528525835"
+FIRST_NAME3 = "John"
+LAST_NAME3= "Doe"
+VALID_BIRTHDAY3 = "1999-02-01"
+
 
 
 SUCCESS_CODE = 200
@@ -41,8 +48,7 @@ DEFAULT_RADIUS = 10
 RIDE_POSTED_SUCCESSFULLY = "Ride posted successfully"
 DEPARTURE_DATETIME_KEY = "departure_datetime"
 
-
-#constance for passenger join ride request
+# constance for passenger join ride request
 
 YOU_CREATED_RIDE_ERROR = "You cannot join the ride you created"
 MORE_SEATS_THAN_POSSIBLE = "No available seats"
@@ -50,3 +56,6 @@ SEATS_AMOUNT_NOT_GOOD = "The request must have more than one seat"
 SUCCESS_JOIN_RIDE_REQUEST = "Request to join ride successful"
 ENTER_TWICE_REQUEST = "Cannot send another join request to the same ride"
 RIDE_NOT_FOUND = "404 Not Found"
+
+# constance for get my ride requests
+NOT_SAME_USER = "Unauthorized access to user's ride requests"
