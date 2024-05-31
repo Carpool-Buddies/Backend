@@ -29,10 +29,10 @@ passenger_make_ride_offer = passenger_ns.model('PassengerMakeRideOfferModel',
                                                 "departure_datetime": fields.DateTime(required=True),
                                                 "notes": fields.String(required=False)
                                                 })
-passenger_join_ride_request1 = passenger_ns.model('JoinRideRequest',
-                                                  {
-                                                      "ride_id": fields.Integer(required=True)
-                                                  })
+
+passenger_get_rides = passenger_ns.model('PassengerGetRides', {
+    'date': fields.DateTime(required=True)
+})
 
 passenger_join_ride_request = passenger_ns.model('JoinRideRequest', {
     "ride_id": fields.Integer(required=True),
@@ -82,36 +82,6 @@ class MakeRideOffer(Resource):
         else:
             return {"error": "Failed to make ride offer"}, 500
 
-
-
-
-@passenger_ns.doc(security='JWT Bearer')
-@passenger_ns.route('/<int:user_id>/rides/join_ride')
-class join_ride_request(Resource):
-    """
-    ask for confirmation to join a ride
-    """
-
-    @token_required
-    @passenger_ns.expect(passenger_join_ride_request1, validate=True)
-    def put(self, current_user, user_id):
-        try:
-            # Check if the current user is authorized to view the ride posts of the specified user
-            if current_user.id != user_id:
-                return {"message": "Unauthorized access to user's ride posts"}, 403
-
-            req_data = request.get_json()
-
-            # Update ride details using DriverService
-            success = passenger_service.join_ride_request(user_id, req_data.get("ride_id"), 1)
-
-            if success:
-                return {"success": True}, 200
-            else:
-                return {"error": "Failed to request to join ride"}, 400
-
-        except Exception as e:
-            return {"error": str(e)}, 500
 
 
 @passenger_ns.doc(security='JWT Bearer')

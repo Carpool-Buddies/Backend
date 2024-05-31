@@ -33,9 +33,9 @@ update_ride_model = driver_ns.model('UpdateRideModel', {"departure_location": fi
                                                         "notes": fields.String()
                                                         })
 
+get_join_requests_model = driver_ns.model('GetJoinRequestsModel', {"request_status": fields.String(required=False)})
 
-ride_request_model = driver_ns.model('RideRequestModel', {'request_id': fields.Integer(required=True),
-                                                        'status_update': fields.String(required=True)
+ride_request_model = driver_ns.model('RideRequestModel', {'request_id': fields.Integer(required=False)
                                                         })
 
 """
@@ -122,10 +122,11 @@ class ManagePassengerRequests(Resource):
     Allows users to manage passenger join ride requests for a specific future ride post.
     """
 
+    @driver_ns.expect(get_join_requests_model)
     @token_required
     def get(self, current_user, user_id, ride_id):
         """
-        Retrieves the list of pending join requests for the selected ride.
+        Retrieves the list of join requests for the selected ride.
         """
         try:
             # Check if the current user is authorized to view the ride posts of the specified user
@@ -133,8 +134,12 @@ class ManagePassengerRequests(Resource):
                 response = Response(success=False, message="Unauthorized access to user's ride posts", status_code=403)
                 return response.to_tuple()
 
+            req_data = request.get_json()
+
+            request_status = req_data.get("request_status", None)
+
             # Retrieve pending join requests using the service
-            return DriverService.get_pending_join_requests_for_ride(ride_id)
+            return DriverService.get_join_requests_for_ride(ride_id, request_status=request_status)
 
         except Exception as e:
             response = Response(success=False, message=str(e), status_code=500)

@@ -107,7 +107,7 @@ def update_user_details(client, token, new_details):
     )
     return response
 
-def get_pending_requests(client, token, user_id, ride_id):
+def get_pending_requests(client, token, user_id, ride_id, request_status="pending"):
     """
     Helper function to get pending ride requests.
 
@@ -120,8 +120,17 @@ def get_pending_requests(client, token, user_id, ride_id):
     Returns:
     - response: The response object from the get request
     """
+
+    data = {
+        "request_status": request_status
+    }
+
+    # Remove None values from data
+    data = {k: v for k, v in data.items() if v is not None}
+
     response = client.get(
         f"/api/drivers/{user_id}/rides/manage_requests/{ride_id}",
+        data=json.dumps(data),
         headers={'Content-Type': 'application/json', 'accept': 'application/json', "Authorization": f"{token}"}
     )
     return response
@@ -383,8 +392,8 @@ def test_get_pending_requests_success(client):
     pending_requests_response = get_pending_requests(client, driver_token, driver_id, ride_id)
     assert pending_requests_response.status_code == SUCCESS_CODE
     pending_requests_data = pending_requests_response.get_json()
-    assert "pending_requests" in pending_requests_data
-    assert len(pending_requests_data["pending_requests"]) > 0  # Ensure there is at least one pending request
+    assert "join_ride_requests" in pending_requests_data
+    assert len(pending_requests_data["join_ride_requests"]) > 0  # Ensure there is at least one pending request
 
 # -----------------------------------------------------------
 #               Driver - Manage join ride request
@@ -411,9 +420,9 @@ def test_manage_ride_request_accept_success(client):
     pending_requests_response = get_pending_requests(client, driver_token, driver_id, ride_id)
     assert pending_requests_response.status_code == SUCCESS_CODE
     pending_requests_data = pending_requests_response.get_json()
-    assert "pending_requests" in pending_requests_data
-    assert len(pending_requests_data["pending_requests"]) > 0  # Ensure there is at least one pending request
-    pending_request = pending_requests_data["pending_requests"][0]
+    assert "join_ride_requests" in pending_requests_data
+    assert len(pending_requests_data["join_ride_requests"]) > 0  # Ensure there is at least one pending request
+    pending_request = pending_requests_data["join_ride_requests"][0]
     request_id = pending_request["id"]
 
     # Accept the ride request
@@ -444,9 +453,9 @@ def test_manage_ride_request_reject_success(client):
     pending_requests_response = get_pending_requests(client, driver_token, driver_id, ride_id)
     assert pending_requests_response.status_code == SUCCESS_CODE
     pending_requests_data = pending_requests_response.get_json()
-    assert "pending_requests" in pending_requests_data
-    assert len(pending_requests_data["pending_requests"]) > 0  # Ensure there is at least one pending request
-    pending_request = pending_requests_data["pending_requests"][0]
+    assert "join_ride_requests" in pending_requests_data
+    assert len(pending_requests_data["join_ride_requests"]) > 0  # Ensure there is at least one pending request
+    pending_request = pending_requests_data["join_ride_requests"][0]
     request_id = pending_request["id"]
 
     # Reject the ride request
@@ -477,9 +486,9 @@ def test_manage_ride_request_unauthorized(client):
     pending_requests_response = get_pending_requests(client, driver_token, driver_id, ride_id)
     assert pending_requests_response.status_code == SUCCESS_CODE
     pending_requests_data = pending_requests_response.get_json()
-    assert "pending_requests" in pending_requests_data
-    assert len(pending_requests_data["pending_requests"]) > 0  # Ensure there is at least one pending request
-    pending_request = pending_requests_data["pending_requests"][0]
+    assert "join_ride_requests" in pending_requests_data
+    assert len(pending_requests_data["join_ride_requests"]) > 0  # Ensure there is at least one pending request
+    pending_request = pending_requests_data["join_ride_requests"][0]
     request_id = pending_request["id"]
 
     # Unauthorized user tries to manage the ride request

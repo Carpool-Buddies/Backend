@@ -229,7 +229,7 @@ class DriverService:
             return response.to_tuple()
 
     @staticmethod
-    def get_pending_join_requests_for_ride(ride_id):
+    def get_join_requests_for_ride(ride_id, request_status=None):
         """
         Retrieves the list of pending join requests for the specified ride.
 
@@ -240,10 +240,14 @@ class DriverService:
         - response: tuple, a response object containing success status, message, and the list of pending join requests
         """
         try:
-            pending_requests = JoinRideRequests.query.filter_by(ride_id=ride_id, status='pending').all()
-            pending_requests_dicts = [request.to_dict() for request in pending_requests]
+            if request_status is None:
+                join_ride_requests = JoinRideRequests.query.filter_by(ride_id=ride_id).all()
+            else:
+                join_ride_requests = JoinRideRequests.query.filter_by(ride_id=ride_id, status=request_status).all()
+
+            join_ride_requests_dicts = [request.to_dict() for request in join_ride_requests]
             response = Response(success=True, message="Pending join requests retrieved successfully", status_code=200,
-                                data={"pending_requests": pending_requests_dicts})
+                                data={"join_ride_requests": join_ride_requests_dicts})
             return response.to_tuple()
         except Exception as e:
             print(f"Error retrieving pending requests: {str(e)}")
