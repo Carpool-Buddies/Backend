@@ -96,8 +96,8 @@ def register_and_login(client, email=VALID_EMAIL, password=VALID_PASSWORD, first
 #                           Register
 # -----------------------------------------------------------
 @pytest.mark.parametrize("email, password, first_name, last_name, phone_number, birthday", [
-    ("user1@example.com", "ValidPassword1!", "John", "Doe", "1234567890", "1990-01-01"),
-    ("user2@example.com", "AnotherValidPass2@", "Jane", "Smith", "0987654321", "1985-12-31")
+    ("user1@post.bgu.ac.il", "ValidPassword1!", "John", "Doe", "1234567890", "1990-01-01"),
+    ("user2@bgu.ac.il", "AnotherValidPass2@", "Jane", "Smith", "0987654321", "1985-12-31")
 ])
 def test_GivenValidUserData_thenSignUp_returnSuccessCodeAndMsg(email, password, first_name, last_name, phone_number,
                                                                birthday, client):
@@ -108,7 +108,7 @@ def test_GivenValidUserData_thenSignUp_returnSuccessCodeAndMsg(email, password, 
 
 @pytest.mark.parametrize("email, password, first_name, last_name, phone_number, birthday", [
     # Missing '@' symbol
-    ("user1example.com", "ValidPassword1!", "John", "Doe", "1234567890", "1990-01-01"),
+    ("user1post.bgu.ac.il", "ValidPassword1!", "John", "Doe", "1234567890", "1990-01-01"),
     # No domain
     ("user@.com", "ValidPassword1!", "John", "Doe", "1234567890", "1990-01-01"),
     # No username
@@ -137,21 +137,21 @@ def test_GivenInvalidEmail_thenSignUp_returnAppropriateCodeAndMsg(email, passwor
 
 @pytest.mark.parametrize("email, password, first_name, last_name, phone_number, birthday", [
     # Too short password
-    ("user1ip@example.com", "Short1!", "John", "Doe", "1234567890", "1990-01-01"),
+    ("user1ip@post.bgu.ac.il", "Short1!", "John", "Doe", "1234567890", "1990-01-01"),
     # Missing uppercase letter
-    ("user1ip@example.com", "invalidpassword1", "John", "Doe", "1234567890", "1990-01-01"),
+    ("user1ip@post.bgu.ac.il", "invalidpassword1", "John", "Doe", "1234567890", "1990-01-01"),
     # Missing lowercase letter
-    ("user1ip@example.com", "INVALIDPASSWORD1", "John", "Doe", "1234567890", "1990-01-01"),
+    ("user1ip@post.bgu.ac.il", "INVALIDPASSWORD1", "John", "Doe", "1234567890", "1990-01-01"),
     # Missing digit
-    ("user1ip@example.com", "InvalidPassword", "John", "Doe", "1234567890", "1990-01-01"),
+    ("user1ip@post.bgu.ac.il", "InvalidPassword", "John", "Doe", "1234567890", "1990-01-01"),
     # All lowercase letters
-    ("user1ip@example.com", "alllowercase", "John", "Doe", "1234567890", "1990-01-01"),
+    ("user1ip@post.bgu.ac.il", "alllowercase", "John", "Doe", "1234567890", "1990-01-01"),
     # All uppercase letters
-    ("user1ip@example.com", "ALLUPPERCASE", "John", "Doe", "1234567890", "1990-01-01"),
+    ("user1ip@post.bgu.ac.il", "ALLUPPERCASE", "John", "Doe", "1234567890", "1990-01-01"),
     # All digits
-    ("user1ip@example.com", "1234567890", "John", "Doe", "1234567890", "1990-01-01"),
+    ("user1ip@post.bgu.ac.il", "1234567890", "John", "Doe", "1234567890", "1990-01-01"),
     # All symbols
-    ("user1ip@example.com", "!@#$%^&*()", "John", "Doe", "1234567890", "1990-01-01"),
+    ("user1ip@post.bgu.ac.il", "!@#$%^&*()", "John", "Doe", "1234567890", "1990-01-01"),
 ])
 def test_GivenInvalidPassword_thenSignUp_returnAppropriateCodeAndMsg(email, password, first_name, last_name,
                                                                      phone_number, birthday, client):
@@ -164,11 +164,11 @@ def test_GivenInvalidPassword_thenSignUp_returnAppropriateCodeAndMsg(email, pass
 
 @pytest.mark.parametrize("email, password, first_name, last_name, phone_number, birthday", [
     # Future date
-    ("user1@example.com", "ValidPassword1!", "John", "Doe", "1234567890", "2025-01-01"),
+    ("user1@post.bgu.ac.il", "ValidPassword1!", "John", "Doe", "1234567890", "2025-01-01"),
     # Too old
-    ("user1@example.com", "ValidPassword1!", "John", "Doe", "1234567890", "1900-01-01"),
+    ("user1@post.bgu.ac.il", "ValidPassword1!", "John", "Doe", "1234567890", "1900-01-01"),
     # Invalid format
-    ("user1@example.com", "ValidPassword1!", "John", "Doe", "1234567890", "01-01-1990"),
+    ("user1@post.bgu.ac.il", "ValidPassword1!", "John", "Doe", "1234567890", "01-01-1990"),
 ])
 def test_GivenInvalidBirthday_thenSignUp_returnAppropriateCodeAndMsg(email, password, first_name, last_name,
                                                                      phone_number, birthday, client):

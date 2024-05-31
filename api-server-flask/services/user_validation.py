@@ -5,8 +5,7 @@ from utils.auth_exceptions import *
 
 MIN_AGE = 16
 MAX_AGE = 120
-
-
+VALID_EMAIL_ENDING = ["post.bgu.ac.il","bgu.ac.il"]
 def validate_all(email=None, password=None, birthday=None, phone_number=None):
     if email:
         validate_email(email)
@@ -50,6 +49,11 @@ def validate_email(email):
     regex = r'^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$'
     if not re.match(regex, email, re.I):
         raise EmailValidationError("Invalid email format.")
+    end = email.split('@')
+    if len(end) != 2:
+        raise EmailValidationError("Invalid email format.")
+    if end[1] not in VALID_EMAIL_ENDING:
+        raise EmailValidationError("Not a bgu email")
 
 
 def validate_birthday(birthday):
