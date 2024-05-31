@@ -135,6 +135,7 @@ class AuthService:
 
             return {"success": False,
                     "msg": str(e.args[0])}, int(e.args[1])
+        user_exists.approve()
         return {"success": True,
                 "msg": "User verified"}, 200
 

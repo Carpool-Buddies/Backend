@@ -51,6 +51,10 @@ class Users(db.Model):
     def update_email(self, new_email):
         self.email = new_email
 
+    def approve(self):
+        self.approved = True
+        self.save()
+
     def update_field(self, field, value):
         if hasattr(self, field):
             setattr(self, field, value)

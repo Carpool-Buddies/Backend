@@ -200,11 +200,13 @@ class UserDetails(Resource):
         email = current_user.email
         first_name = current_user.first_name
         last_name = current_user.last_name
+        approved = current_user.approved
         return {"success": True,
                 "email": email,
                 "id": user_id,
                 "first_name": first_name,
-                "last_name": last_name}, 200
+                "last_name": last_name,
+                "approved": approved}, 200
 
 
 @auth_ns.doc(security='JWT Bearer')
