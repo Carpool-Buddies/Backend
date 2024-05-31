@@ -29,11 +29,6 @@ passenger_make_ride_offer = passenger_ns.model('PassengerMakeRideOfferModel',
                                                 "departure_datetime": fields.DateTime(required=True),
                                                 "notes": fields.String(required=False)
                                                 })
-
-passenger_get_rides = passenger_ns.model('PassengerGetRides', {
-    'date': fields.DateTime(required=True)
-})
-
 passenger_join_ride_request1 = passenger_ns.model('JoinRideRequest',
                                                   {
                                                       "ride_id": fields.Integer(required=True)
@@ -88,22 +83,6 @@ class MakeRideOffer(Resource):
             return {"error": "Failed to make ride offer"}, 500
 
 
-@passenger_ns.doc(security='JWT Bearer')
-@passenger_ns.route('/<int:user_id>/rides')
-class GetRides(Resource):
-    """
-    get the future rides according to date and location
-    """
-
-    @token_required
-    @passenger_ns.expect(passenger_get_rides, validate=True)
-    def put(self, current_user, user_id):
-        if current_user.id != user_id:
-            return {"message": "Unauthorized access to user's ride posts"}, 403
-        req_data = request.get_json()
-        date = req_data.get("date")
-        resp = passenger_service.get_rides(date)
-        return {"ride_posts": resp}, 200
 
 
 @passenger_ns.doc(security='JWT Bearer')
@@ -197,11 +176,19 @@ class GetMyRideRequests(Resource):
     @token_required
     def get(self, current_user, user_id):
         if current_user.id != user_id:
-            return {"message": "Unauthorized access to user's ride posts"}, 403
+            response = Response(success=False,
+                                message=f"Error Get My Ride Requests: Unauthorized access to user's ride requests",
+                                status_code=403)
+            return response.to_tuple()
         try:
             resp = passenger_service.get_my_rides(user_id)
         except Exception as e:
-            return {"success": False,
-                    "msg": str(e.args[0])},e.args[1]
-        return {"success": True,
-                "rides": resp}, 200
+            response = Response(success=False,
+                                message=f"Error Get My Ride Requests: {str(e.args[0])}",
+                                status_code=403)
+            return response.to_tuple()
+        response = Response(success=True,
+                            message=f"success in get requests",
+                            status_code=200,
+                            data={"data":resp})
+        return response.to_tuple()
