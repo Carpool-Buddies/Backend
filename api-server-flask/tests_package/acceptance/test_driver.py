@@ -128,7 +128,7 @@ def get_pending_requests(client, token, user_id, ride_id, request_status="pendin
     # Remove None values from data
     data = {k: v for k, v in data.items() if v is not None}
 
-    response = client.get(
+    response = client.post(
         f"/api/drivers/{user_id}/rides/manage_requests/{ride_id}",
         data=json.dumps(data),
         headers={'Content-Type': 'application/json', 'accept': 'application/json', "Authorization": f"{token}"}
