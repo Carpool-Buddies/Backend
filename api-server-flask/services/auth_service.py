@@ -242,6 +242,7 @@ class AuthService:
             if "password" in new_details.keys():
                 validate_password(new_details["password"])
             if "phone_number" in new_details.keys():
+                new_details["phone_number"] = new_details["phone_number"].replace(" ", "")
                 validate_phone_number(new_details["phone_number"])
             if "birthday" in new_details.keys():
                 validate_birthday(new_details["birthday"])  # Validate birthday

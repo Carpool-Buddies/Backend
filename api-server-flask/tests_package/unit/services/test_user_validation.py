@@ -66,6 +66,7 @@ def test_validate_phone_number_valid():
     assert validate_phone_number("+972509011571") is None
     assert validate_phone_number("+97250-901-1571") is None
     assert validate_phone_number("+972-50-901-1571") is None
+    assert validate_phone_number("+972 50 901 1571") is None
     assert validate_phone_number("123-456-7890") is None
 
 def test_validate_phone_number_invalid():
