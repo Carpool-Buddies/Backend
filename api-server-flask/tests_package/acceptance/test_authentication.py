@@ -97,7 +97,8 @@ def register_and_login(client, email=VALID_EMAIL, password=VALID_PASSWORD, first
 # -----------------------------------------------------------
 @pytest.mark.parametrize("email, password, first_name, last_name, phone_number, birthday", [
     ("user1@post.bgu.ac.il", "ValidPassword1!", "John", "Doe", "1234567890", "1990-01-01"),
-    ("user2@bgu.ac.il", "AnotherValidPass2@", "Jane", "Smith", "0987654321", "1985-12-31")
+    ("user2@bgu.ac.il", "AnotherValidPass2@", "Jane", "Smith", "0987654321", "1985-12-31"),
+    ("user3@bgu.ac.il", "AnotherValidPass2@", "Jane", "Smith", "+972 509 011 571", "1985-12-31")
 ])
 def test_GivenValidUserData_thenSignUp_returnSuccessCodeAndMsg(email, password, first_name, last_name, phone_number,
                                                                birthday, client):

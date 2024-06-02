@@ -56,6 +56,7 @@ class AuthService:
     @staticmethod
     def register_user(email, password, first_name, last_name, phone_number, birthday):
         try:
+            phone_number = phone_number.replace(" ", "")
             # Create and validate the user
             validate_all(email=email, password=password, birthday=birthday, phone_number=phone_number)
 
