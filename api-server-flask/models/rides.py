@@ -1,5 +1,6 @@
 from datetime import datetime
-#from join_ride_requests import JoinRideRequests
+# from join_ride_requests import JoinRideRequests
+from utils.response import Response
 from . import db
 from .join_ride_requests import JoinRideRequests
 
@@ -97,7 +98,6 @@ class Rides(db.Model):
     def to_json(self):
         return self.to_dict()
 
-
     # TODO: Issues-18
     def accept_ride_request(self, request_id):
         """
@@ -157,3 +157,18 @@ class Rides(db.Model):
             print(f"Error rejecting ride request: {str(e)}")
             db.session.rollback()
             return False
+
+    @staticmethod
+    def delete_not_started_rides():
+        # Calculate the cutoff time (4 minutes ago from the current time)
+        from api import app
+        cutoff_time = datetime.now()
+        with app.app_context():
+            # Delete expired verification codes directly from the database
+            x = Rides.query.filter(Rides.departure_datetime < cutoff_time, Rides.status != 'waiting')
+            x.delete(synchronize_session=False)
+
+            # Commit the changes to the database
+            db.session.commit()
+        response = Response(success=True, message="OK", status_code=200)
+        return response.to_tuple()

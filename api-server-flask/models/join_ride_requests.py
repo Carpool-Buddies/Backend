@@ -1,7 +1,8 @@
 import pytz
 from sqlalchemy import UniqueConstraint
 
-from . import db
+from utils.response import Response
+from . import db, Rides
 from datetime import datetime
 
 
@@ -39,3 +40,21 @@ class JoinRideRequests(db.Model):
 
     def to_json(self):
         return self.to_dict()
+
+    @staticmethod
+    def delete_not_accepted_passengers():
+        # Calculate the cutoff time (4 minutes ago from the current time)
+        from api import app
+        cutoff_time = datetime.now()
+        with app.app_context():
+            # Delete expired verification codes directly from the database
+            db.session.query(JoinRideRequests).filter(
+                JoinRideRequests.status != 'accepted',
+                JoinRideRequests.ride_id == Rides.id,
+                Rides.departure_datetime < cutoff_time
+            ).delete(synchronize_session=False)
+
+            # Commit the changes to the database
+            db.session.commit()
+        response = Response(success=True, message="OK", status_code=200)
+        return response.to_tuple()
