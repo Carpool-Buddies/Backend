@@ -124,7 +124,7 @@ class ManagePassengerRequests(Resource):
 
     @driver_ns.expect(get_join_requests_model)
     @token_required
-    def get(self, current_user, user_id, ride_id):
+    def post(self, current_user, user_id, ride_id):
         """
         Retrieves the list of join requests for the selected ride.
         """
