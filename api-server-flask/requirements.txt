@@ -26,7 +26,6 @@ PyJWT==2.6.0
 pyrsistent==0.19.2
 pytest==7.1.2
 python-dotenv==0.19.2
-pytz==2022.6
 requests==2.28.1
 six==1.16.0
 SQLAlchemy==1.4.46
@@ -39,4 +38,5 @@ pymysql
 googlemaps==4.10.0
 geocoder==1.38.1
 geopy==2.4.1
+pytz==2024.1
 # psycopg2-binary

@@ -165,11 +165,11 @@ def manage_ride_request(client, token, user_id, ride_id, request_id, status_upda
 @pytest.mark.parametrize(
     "departure_location, pickup_radius, destination, drop_radius, departure_datetime, available_seats, notes", [
         # Valid ride details
-        ("Main Street", 10, "Market Square", 10, "2024-06-15T15:00:00.000Z", 4, "Pick up near the cafe."),
-        ("Downtown", 15, "Central Park", 15, "2024-06-20T09:30:00.000Z", 3, "Please arrive 5 minutes early."),
-        ("Suburb", 5, "Local Mall", 5, "2024-07-01T12:00:00.000Z", 2, "Contact on arrival."),
-        ("Office Area", 20, "Airport", 20, "2024-08-10T07:00:00.000Z", 6, "Extra space for luggage."),
-        ("Residential Block", 10, "University", 10, "2024-09-05T08:00:00.000Z", 4, "Students only.")
+        ("Main Street", 10, "Market Square", 10, "2030-06-15T15:00:00.000Z", 4, "Pick up near the cafe."),
+        ("Downtown", 15, "Central Park", 15, "2030-06-20T09:30:00.000Z", 3, "Please arrive 5 minutes early."),
+        ("Suburb", 5, "Local Mall", 5, "2030-07-01T12:00:00.000Z", 2, "Contact on arrival."),
+        ("Office Area", 20, "Airport", 20, "2030-08-10T07:00:00.000Z", 6, "Extra space for luggage."),
+        ("Residential Block", 10, "University", 10, "2030-09-05T08:00:00.000Z", 4, "Students only.")
     ])
 def test_GivenValidFutureRideData_thenPostRideSuccessfully(departure_location, pickup_radius, destination, drop_radius,
                                                            departure_datetime, available_seats, notes, client):
@@ -192,6 +192,25 @@ def test_GivenValidFutureRideData_thenPostRideSuccessfully(client):
     assert response.status_code == SUCCESS_CODE
     assert RIDE_POSTED_SUCCESSFULLY in data["msg"]
 
+def test_GivenFutureRideDataForTomorow_thenPostRideSuccessfully(client):
+    register_user(client)
+    response = login_user(client)
+    token = json.loads(response.data.decode())["token"]
+    departure_datetime = datetime.now() + timedelta(days=1)
+    response = driver_post_future_rides(client, token, departure_datetime=departure_datetime.isoformat() + 'Z')
+    data = json.loads(response.data.decode())
+    assert response.status_code == SUCCESS_CODE
+    assert RIDE_POSTED_SUCCESSFULLY in data["msg"]
+
+def test_GivenFutureRideDataForNextHour_thenPostRideSuccessfully(client):
+    register_user(client)
+    response = login_user(client)
+    token = json.loads(response.data.decode())["token"]
+    departure_datetime = datetime.now() + timedelta(hours=1)
+    response = driver_post_future_rides(client, token, departure_datetime=departure_datetime.isoformat() + 'Z')
+    data = json.loads(response.data.decode())
+    assert response.status_code == SUCCESS_CODE
+    assert RIDE_POSTED_SUCCESSFULLY in data["msg"]
 
 @pytest.mark.parametrize(
     "departure_location, pickup_radius, destination, drop_radius, departure_datetime, available_seats, notes", [
