@@ -31,15 +31,30 @@ class FutureRidePost:
             raise ValueError("Driver already has a ride scheduled within the next 5 hours")
 
     def has_ride_within_next_five_hours(self):
+        now = datetime.now()
         five_hours_before = self.departure_datetime - timedelta(hours=5)
         five_hours_after = self.departure_datetime + timedelta(hours=5)
 
+        # Check if the driver has rides within the next five hours
         existing_rides = Rides.query.filter(
             Rides.driver_id == self.driver_id,
-            Rides.departure_datetime.between(five_hours_before, five_hours_after)
+            Rides.departure_datetime.between(max(five_hours_before, now), five_hours_after)
         ).all()
 
-        return len(existing_rides) > 0
+        if len(existing_rides) > 0:
+            return True
+
+        # Check if the driver's last ride within the five hours before self.departure_datetime is completed
+        last_ride = Rides.query.filter(
+            Rides.driver_id == self.driver_id,
+            Rides.departure_datetime < self.departure_datetime,
+            Rides.departure_datetime >= five_hours_before
+        ).order_by(Rides.departure_datetime.desc()).first()
+
+        if last_ride and last_ride.ride_status != 'Completed':
+            return True
+
+        return False
 
     def save(self):
         new_ride = Rides(
