@@ -6,6 +6,8 @@ Copyright (c) 2019 - present AppSeed.us
 import os, random, string
 from datetime import timedelta
 
+import pytz
+
 BASE_DIR = os.path.dirname(os.path.realpath(__file__))
 
 class BaseConfig():
@@ -22,7 +24,10 @@ class BaseConfig():
     GITHUB_CLIENT_SECRET = os.getenv('GITHUB_SECRET_KEY', None)
 
     GOOGLE_MAPS_API_KEY = os.getenv('GOOGLE_MAPS_API_KEY', None)
-    
+
+    TIMEZONE_STR = os.getenv('TIMEZONE_STR', 'Asia/Jerusalem')
+    TIMEZONE = pytz.timezone(TIMEZONE_STR)
+
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=1)
 
     SQLALCHEMY_TRACK_MODIFICATIONS = False
