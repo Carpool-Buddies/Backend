@@ -2,7 +2,7 @@ from datetime import datetime
 # from join_ride_requests import JoinRideRequests
 from utils.response import Response
 from . import db
-from .join_ride_requests import JoinRideRequests
+
 
 
 class Rides(db.Model):
@@ -165,7 +165,7 @@ class Rides(db.Model):
         cutoff_time = datetime.now()
         with app.app_context():
             # Delete expired verification codes directly from the database
-            x = Rides.query.filter(Rides.departure_datetime < cutoff_time, Rides.status != 'waiting')
+            x = Rides.query.filter(Rides.departure_datetime < cutoff_time, Rides.status == 'waiting')
             x.delete(synchronize_session=False)
 
             # Commit the changes to the database

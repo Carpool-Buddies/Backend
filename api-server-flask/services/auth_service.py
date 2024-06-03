@@ -275,14 +275,14 @@ class AuthService:
 
     @staticmethod
     def cleanDatabase(magic):
-        if magic != os.getenv('MAGIC'):
+        if str(magic) != os.getenv('MAGIC'):
             response = Response(success=False, message="cannot preform the cleaning", status_code=400)
             return response.to_tuple()
         try:
             VerificationCodes.delete_expired_verification_codes()
             Rides.delete_not_started_rides()
             JoinRideRequests.delete_not_accepted_passengers()
-        except Exception:
+        except Exception as e:
             response = Response(success=False, message="cannot preform the cleaning", status_code=400)
             return response.to_tuple()
 

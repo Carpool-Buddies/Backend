@@ -8,6 +8,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from services.auth_service import AuthService
 import atexit
 
+
 @app.shell_context_processor
 def make_shell_context():
     return {"app": app,
@@ -15,12 +16,9 @@ def make_shell_context():
             }
 
 
-
-
-
 if __name__ == '__main__':
     scheduler = BackgroundScheduler()
-    scheduler.add_job(AuthService.send_clean_database, 'cron', hour=21, minute=34)
+    scheduler.add_job(AuthService.send_clean_database, 'cron', hour=0, minute=10)
     scheduler.start()
     app.scheduler = scheduler
     # Shut down the scheduler when exiting the app
