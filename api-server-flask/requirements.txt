@@ -39,4 +39,5 @@ pymysql
 googlemaps==4.10.0
 geocoder==1.38.1
 geopy==2.4.1
+apscheduler==3.10.4
 # psycopg2-binary
