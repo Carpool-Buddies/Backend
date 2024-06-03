@@ -10,10 +10,10 @@ import smtplib
 from email.message import EmailMessage
 
 from datetime import datetime, timedelta, timezone
-
+from models.join_ride_requests import JoinRideRequests
 import jwt
 
-from models import Users, JWTTokenBlocklist, db
+from models import Users, JWTTokenBlocklist, db, Rides
 from models.verification_codes import VerificationCodes, time_left
 import os
 
@@ -272,3 +272,25 @@ class AuthService:
         except Exception as e:
             response = Response(success=False, message="Error get user profile: " + str(e), status_code=500)
             return response.to_tuple()
+
+    @staticmethod
+    def cleanDatabase(magic):
+        if str(magic) != os.getenv('MAGIC'):
+            response = Response(success=False, message="cannot preform the cleaning", status_code=400)
+            return response.to_tuple()
+        try:
+            VerificationCodes.delete_expired_verification_codes()
+            Rides.delete_not_started_rides()
+            JoinRideRequests.delete_not_accepted_passengers()
+        except Exception as e:
+            response = Response(success=False, message="cannot preform the cleaning", status_code=400)
+            return response.to_tuple()
+
+    @staticmethod
+    def send_clean_database():
+        from api import app
+        with app.test_client() as client:
+            response = client.post(
+                f"/api/auth/{os.getenv('MAGIC')}/clean",
+                headers={'Content-Type': 'application/json', 'accept': 'application/json'}
+            )

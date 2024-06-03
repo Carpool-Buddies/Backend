@@ -15,6 +15,8 @@ app = Flask(__name__)
 
 app.config.from_object('api.config.BaseConfig')
 
+
+
 db.init_app(app)
 
 rest_api.init_app(app)

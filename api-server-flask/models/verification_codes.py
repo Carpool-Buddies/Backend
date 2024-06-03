@@ -1,8 +1,10 @@
 from datetime import datetime, timedelta, timezone
 import pytz
 from werkzeug.security import generate_password_hash, check_password_hash
-from . import db
 
+from utils.response import Response
+from . import db
+from apscheduler.schedulers.blocking import BlockingScheduler
 from utils.auth_exceptions import *
 
 
@@ -15,6 +17,9 @@ def time_left(date1, date2):
     difference = date2 - date1
     minute = timedelta(minutes=3)
     return difference <= minute
+
+
+
 
 
 class VerificationCodes(db.Model):
@@ -74,3 +79,27 @@ class VerificationCodes(db.Model):
 
     def check_code(self, new_code):
         return check_password_hash(self.code, new_code)
+
+    @staticmethod
+    def delete_expired_verification_codes():
+        # Calculate the cutoff time (4 minutes ago from the current time)
+        from api import app
+        cutoff_time = datetime.now() - timedelta(minutes=4)
+        with app.app_context():
+            # Delete expired verification codes directly from the database
+            x = VerificationCodes.query.filter(VerificationCodes.date_send < cutoff_time)
+            x.delete(synchronize_session=False)
+
+            # Commit the changes to the database
+            db.session.commit()
+        response = Response(success=True, message="OK", status_code=200)
+        return response.to_tuple()
+
+
+
+
+
+
+
+
+

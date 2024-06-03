@@ -251,3 +251,12 @@ class UpdateUserDetails(Resource):
             return response.to_tuple()
 
         return auth.update_user_details(current_user.id, new_details)
+
+
+
+
+
+@auth_ns.route('/<int:magic>/clean')
+class Clean(Resource):
+    def post(self,magic):
+        return auth.cleanDatabase(magic)

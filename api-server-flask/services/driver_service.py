@@ -6,6 +6,7 @@ from utils.response import Response
 
 from sqlalchemy.exc import SQLAlchemyError
 
+
 class DriverService:
 
     @staticmethod
@@ -74,7 +75,6 @@ class DriverService:
             print(f"Error fetching ride posts: {str(e)}")
             response = Response(success=False, message="Error fetching ride posts", status_code=500)
             return response.to_tuple()
-
 
     def get_future_ride_posts_by_user_id(user_id):
         """
@@ -176,12 +176,13 @@ class DriverService:
 
                 # Check if the user is the driver of the ride
                 if ride.driver_id != current_user.id:
-                    raise ValueError("Cannot manage ride request: Only the driver of the ride can accept or reject requests.")
+                    raise ValueError(
+                        "Cannot manage ride request: Only the driver of the ride can accept or reject requests.")
 
                 # Check if the ride is in a waiting state and the departure time has not passed
                 if ride.status != 'waiting':
                     raise ValueError("Cannot manage ride request: ride is not in a waiting state")
-                if ride.departure_datetime <= datetime.utcnow():
+                if ride.departure_datetime <= datetime.now():
                     raise ValueError("Cannot manage ride request: ride's departure time has passed")
 
                 # Retrieve the ride request
@@ -302,7 +303,6 @@ class DriverService:
             db.session.rollback()
             response = Response(success=False, message="Error starting ride", status_code=500)
             return response.to_tuple()
-
 
     @staticmethod
     def end_ride(current_user, ride_id):
