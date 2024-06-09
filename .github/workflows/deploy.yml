@@ -30,7 +30,7 @@ jobs:
         git remote add heroku https://git.heroku.com/${{ env.HEROKU_APP_NAME }}.git
         git push heroku main
     
-    - name: Run Server API
-      run: python api-server-flask\run.py
+    # - name: Run Server API
+    #   run: python api-server-flask\run.py
       
     
