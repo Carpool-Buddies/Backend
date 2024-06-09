@@ -25,13 +25,13 @@ jobs:
     - name: Set Heroku environment variables
       env:
         HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
-        DB_ENGINE: ${{ secrets.DB_ENGINE }}
-        DB_USERNAME: ${{ secrets.DB_USERNAME }}
+        DB_ENGINE: mysql+pymysql
+        DB_USERNAME: root
         DB_PASS: ${{ secrets.DB_PASS }}
-        DB_HOST: ${{ secrets.DB_HOST }}
-        DB_PORT: ${{ secrets.DB_PORT }}
-        DB_NAME: ${{ secrets.DB_NAME }}
-        USE_SQLITE: ${{ secrets.USE_SQLITE }}
+        DB_HOST: 34.105.159.48
+        DB_PORT: 3306
+        DB_NAME: CarpoolBGU
+        USE_SQLITE: FALSE
         GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
         EMAIL_SERVER_PASSWORD: ${{ secrets.EMAIL_SERVER_PASSWORD }}
       run: |
