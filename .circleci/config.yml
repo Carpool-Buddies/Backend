@@ -3,7 +3,7 @@ version: 2.1
 jobs:
   test:
     docker:
-      - image: cimg/python:3.12  # Update to Python 3.12
+      - image: cimg/python:3.12
     steps:
       - checkout
       - run:
@@ -17,11 +17,11 @@ jobs:
           name: Run tests
           command: |
             . env/bin/activate
-            pytest api-server-flask/  # Assuming you're using pytest for testing
+            pytest api-server-flask/
 
   build:
     docker:
-      - image: cimg/python:3.12  # Update to Python 3.12
+      - image: cimg/python:3.12
     steps:
       - checkout
       - run:
@@ -39,7 +39,7 @@ jobs:
 
   deploy:
     docker:
-      - image: cimg/python:3.12  # Update to Python 3.12
+      - image: cimg/python:3.12
     steps:
       - checkout
       - run:
@@ -51,11 +51,17 @@ jobs:
             pip install -r api-server-flask/requirements.txt || echo "No requirements.txt file found"
       - run:
           name: Set up Flask environment variables
-          command: |
-            export FLASK_APP=api-server-flask/run.py
-            export FLASK_ENV=development
+          working_directory: ~/api-server-flask  # Ensure correct directory
+          environment:
+            FLASK_APP: run.py
+            FLASK_ENV: development
+          command: echo "Environment variables set"
       - run:
           name: Start Flask server
+          working_directory: ~/api-server-flask  # Ensure correct directory
+          environment:
+            FLASK_APP: run.py
+            FLASK_ENV: development
           command: |
             . env/bin/activate
             flask run --host=0.0.0.0
