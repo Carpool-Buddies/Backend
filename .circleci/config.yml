@@ -17,7 +17,7 @@ jobs:
           name: Run tests
           command: |
             . env/bin/activate
-            pytest api-server-flask/  # Assuming you're using pytest for testing
+            pytest api-server-flask/
 
   build:
     docker:
@@ -62,6 +62,7 @@ jobs:
             FLASK_ENV: development
           command: |
             . env/bin/activate
+            cd api-server-flask
             flask run
 
 workflows:
