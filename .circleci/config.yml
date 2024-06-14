@@ -52,13 +52,13 @@ jobs:
       - run:
           name: Set up Flask environment variables
           environment:
-            FLASK_APP: api-server-flask/run.py
+            FLASK_APP: run.py
             FLASK_ENV: development
           command: echo "Environment variables set"
       - run:
           name: Start Flask server
           environment:
-            FLASK_APP: api-server-flask/run.py
+            FLASK_APP: run.py
             FLASK_ENV: development
           command: |
             . env/bin/activate
