@@ -66,7 +66,7 @@ jobs:
             flask run
 
 workflows:
-  example:
+  API Server:
     jobs:
       - test
       - build:
