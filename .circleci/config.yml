@@ -62,7 +62,7 @@ jobs:
             FLASK_ENV: development
           command: |
             . env/bin/activate
-            flask run --host=0.0.0.0
+            flask run
 
 workflows:
   example:
