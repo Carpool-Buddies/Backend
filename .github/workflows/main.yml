@@ -17,9 +17,9 @@ jobs:
     - name: Install dependencies
       run: |
         python -m venv env
-        . env/bin/activate
+        # . env/bin/activate
         python -m pip install --upgrade pip
-        python -m pip install -r api-server-flask/requirements.txt || echo "No requirements.txt file found"
+        pip install -r api-server-flask/requirements.txt || echo "No requirements.txt file found"
     - name: Set up Flask environment variables
       env:
         FLASK_APP: run.py
@@ -30,6 +30,6 @@ jobs:
         FLASK_APP: run.py
         FLASK_ENV: development
       run: |
-        . env/bin/activate
+        # . env/bin/activate
         cd api-server-flask
         flask run
