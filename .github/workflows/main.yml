@@ -16,7 +16,7 @@ jobs:
         python-version: "3.12"
     - name: Install dependencies
       run: |
-        python -m venv env
+        # python -m venv env
         # . env/bin/activate
         python -m pip install --upgrade pip
         pip install -r api-server-flask/requirements.txt || echo "No requirements.txt file found"
