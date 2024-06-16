@@ -19,8 +19,7 @@ jobs:
         python -m venv env
         source env/bin/activate
         python -m pip install --upgrade pip
-        pip install Flask
-        pip install flask_cors
+        pip install python-dotenv
         pip install -r api-server-flask/requirements.txt || echo "No requirements.txt file found"
     - name: Set up Flask environment variables
       run: |
