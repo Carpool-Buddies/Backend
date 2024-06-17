@@ -108,11 +108,11 @@ def logout_user(client, token):
 @pytest.mark.parametrize(
     "departure_location, pickup_radius, destination, drop_radius, departure_datetime, available_seats, notes", [
         # Valid ride details
-        ("Main Street", 10, "Market Square", 10, "2024-06-15T15:00:00.000Z", 4, "Pick up near the cafe."),
-        ("Downtown", 15, "Central Park", 15, "2024-06-20T09:30:00.000Z", 3, "Please arrive 5 minutes early."),
-        ("Suburb", 5, "Local Mall", 5, "2024-07-01T12:00:00.000Z", 2, "Contact on arrival."),
-        ("Office Area", 20, "Airport", 20, "2024-08-10T07:00:00.000Z", 6, "Extra space for luggage."),
-        ("Residential Block", 10, "University", 10, "2024-09-05T08:00:00.000Z", 4, "Students only.")
+        ("Main Street", 10, "Market Square", 10, "2025-06-15T15:00:00.000Z", 4, "Pick up near the cafe."),
+        ("Downtown", 15, "Central Park", 15, "2025-06-20T09:30:00.000Z", 3, "Please arrive 5 minutes early."),
+        ("Suburb", 5, "Local Mall", 5, "2025-07-01T12:00:00.000Z", 2, "Contact on arrival."),
+        ("Office Area", 20, "Airport", 20, "2025-08-10T07:00:00.000Z", 6, "Extra space for luggage."),
+        ("Residential Block", 10, "University", 10, "2025-09-05T08:00:00.000Z", 4, "Students only.")
     ])
 def test_GivenSameUserRequestWhenJoinRideRequestExpectFail(departure_location, pickup_radius, destination, drop_radius,
                                                            departure_datetime, available_seats, notes, client):
@@ -130,11 +130,11 @@ def test_GivenSameUserRequestWhenJoinRideRequestExpectFail(departure_location, p
 @pytest.mark.parametrize(
     "departure_location, pickup_radius, destination, drop_radius, departure_datetime, available_seats, notes", [
         # Valid ride details
-        ("Main Street", 10, "Market Square", 10, "2024-06-15T15:00:00.000Z", 4, "Pick up near the cafe."),
-        ("Downtown", 15, "Central Park", 15, "2024-06-20T09:30:00.000Z", 3, "Please arrive 5 minutes early."),
-        ("Suburb", 5, "Local Mall", 5, "2024-07-01T12:00:00.000Z", 2, "Contact on arrival."),
-        ("Office Area", 20, "Airport", 20, "2024-08-10T07:00:00.000Z", 6, "Extra space for luggage."),
-        ("Residential Block", 10, "University", 10, "2024-09-05T08:00:00.000Z", 4, "Students only.")
+        ("Main Street", 10, "Market Square", 10, "2025-06-15T15:00:00.000Z", 4, "Pick up near the cafe."),
+        ("Downtown", 15, "Central Park", 15, "2025-06-20T09:30:00.000Z", 3, "Please arrive 5 minutes early."),
+        ("Suburb", 5, "Local Mall", 5, "2025-07-01T12:00:00.000Z", 2, "Contact on arrival."),
+        ("Office Area", 20, "Airport", 20, "2025-08-10T07:00:00.000Z", 6, "Extra space for luggage."),
+        ("Residential Block", 10, "University", 10, "2025-09-05T08:00:00.000Z", 4, "Students only.")
     ])
 def test_GivenLargeNumberOfSeatsWhenJoinRideRequestExpectFail(departure_location, pickup_radius, destination,
                                                               drop_radius,
@@ -157,11 +157,11 @@ def test_GivenLargeNumberOfSeatsWhenJoinRideRequestExpectFail(departure_location
 @pytest.mark.parametrize(
     "departure_location, pickup_radius, destination, drop_radius, departure_datetime, available_seats, notes, seats", [
         # Valid ride details
-        ("Main Street", 10, "Market Square", 10, "2024-06-15T15:00:00.000Z", 4, "Pick up near the cafe.", -1),
-        ("Downtown", 15, "Central Park", 15, "2024-06-20T09:30:00.000Z", 3, "Please arrive 5 minutes early.", 0),
-        ("Suburb", 5, "Local Mall", 5, "2024-07-01T12:00:00.000Z", 2, "Contact on arrival.", -5),
-        ("Office Area", 20, "Airport", 20, "2024-08-10T07:00:00.000Z", 6, "Extra space for luggage.", -8),
-        ("Residential Block", 10, "University", 10, "2024-09-05T08:00:00.000Z", 4, "Students only.", 0)
+        ("Main Street", 10, "Market Square", 10, "2025-06-15T15:00:00.000Z", 4, "Pick up near the cafe.", -1),
+        ("Downtown", 15, "Central Park", 15, "2025-06-20T09:30:00.000Z", 3, "Please arrive 5 minutes early.", 0),
+        ("Suburb", 5, "Local Mall", 5, "2025-07-01T12:00:00.000Z", 2, "Contact on arrival.", -5),
+        ("Office Area", 20, "Airport", 20, "2025-08-10T07:00:00.000Z", 6, "Extra space for luggage.", -8),
+        ("Residential Block", 10, "University", 10, "2025-09-05T08:00:00.000Z", 4, "Students only.", 0)
     ])
 def test_GivenZeroOrNegativeNumberOfSeatsWhenJoinRideRequestExpectFail(departure_location, pickup_radius, destination,
                                                                        drop_radius,
@@ -185,11 +185,11 @@ def test_GivenZeroOrNegativeNumberOfSeatsWhenJoinRideRequestExpectFail(departure
 @pytest.mark.parametrize(
     "departure_location, pickup_radius, destination, drop_radius, departure_datetime, available_seats, notes, seats", [
         # Valid ride details
-        ("Main Street", 10, "Market Square", 10, "2024-06-15T15:00:00.000Z", 4, "Pick up near the cafe.", 3),
-        ("Downtown", 15, "Central Park", 15, "2024-06-20T09:30:00.000Z", 3, "Please arrive 5 minutes early.", 1),
-        ("Suburb", 5, "Local Mall", 5, "2024-07-01T12:00:00.000Z", 2, "Contact on arrival.", 2),
-        ("Office Area", 20, "Airport", 20, "2024-08-10T07:00:00.000Z", 6, "Extra space for luggage.", 5),
-        ("Residential Block", 10, "University", 10, "2024-09-05T08:00:00.000Z", 4, "Students only.", 2)
+        ("Main Street", 10, "Market Square", 10, "2025-06-15T15:00:00.000Z", 4, "Pick up near the cafe.", 3),
+        ("Downtown", 15, "Central Park", 15, "2025-06-20T09:30:00.000Z", 3, "Please arrive 5 minutes early.", 1),
+        ("Suburb", 5, "Local Mall", 5, "2025-07-01T12:00:00.000Z", 2, "Contact on arrival.", 2),
+        ("Office Area", 20, "Airport", 20, "2025-08-10T07:00:00.000Z", 6, "Extra space for luggage.", 5),
+        ("Residential Block", 10, "University", 10, "2025-09-05T08:00:00.000Z", 4, "Students only.", 2)
     ])
 def test_GivenGoodDataWhenJoinRideRequestExpectSuccess(departure_location, pickup_radius, destination,
                                                        drop_radius,
@@ -212,11 +212,11 @@ def test_GivenGoodDataWhenJoinRideRequestExpectSuccess(departure_location, picku
 @pytest.mark.parametrize(
     "departure_location, pickup_radius, destination, drop_radius, departure_datetime, available_seats, notes, seats", [
         # Valid ride details
-        ("Main Street", 10, "Market Square", 10, "2024-06-15T15:00:00.000Z", 4, "Pick up near the cafe.", 3),
-        ("Downtown", 15, "Central Park", 15, "2024-06-20T09:30:00.000Z", 3, "Please arrive 5 minutes early.", 1),
-        ("Suburb", 5, "Local Mall", 5, "2024-07-01T12:00:00.000Z", 2, "Contact on arrival.", 2),
-        ("Office Area", 20, "Airport", 20, "2024-08-10T07:00:00.000Z", 6, "Extra space for luggage.", 5),
-        ("Residential Block", 10, "University", 10, "2024-09-05T08:00:00.000Z", 4, "Students only.", 2)
+        ("Main Street", 10, "Market Square", 10, "2025-06-15T15:00:00.000Z", 4, "Pick up near the cafe.", 3),
+        ("Downtown", 15, "Central Park", 15, "2025-06-20T09:30:00.000Z", 3, "Please arrive 5 minutes early.", 1),
+        ("Suburb", 5, "Local Mall", 5, "2025-07-01T12:00:00.000Z", 2, "Contact on arrival.", 2),
+        ("Office Area", 20, "Airport", 20, "2025-08-10T07:00:00.000Z", 6, "Extra space for luggage.", 5),
+        ("Residential Block", 10, "University", 10, "2025-09-05T08:00:00.000Z", 4, "Students only.", 2)
     ])
 def test_GivenGoodDataWhenJoinRideRequestTwiceExpectFail(departure_location, pickup_radius, destination,
                                                          drop_radius,
@@ -240,12 +240,12 @@ def test_GivenGoodDataWhenJoinRideRequestTwiceExpectFail(departure_location, pic
 @pytest.mark.parametrize(
     "departure_location, pickup_radius, destination, drop_radius, departure_datetime, available_seats, notes, seats", [
         # Valid ride details
-        ("Main Street", 10, "Market Square", 10, "2024-06-15T15:00:00.000Z", 4, "Pick up near the cafe.", 3),
-        ("Downtown", 15, "Central Park", 15, "2024-06-20T09:30:00.000Z", 3, "Please arrive 5 minutes early.", 1),
-        ("Suburb", 5, "Local Mall", 5, "2024-07-01T12:00:00.000Z", 2, "Contact on arrival.", 2),
-        ("Office Area", 20, "Airport", 20, "2024-08-10T07:00:00.000Z", 6, "Extra space for luggage.", 5),
-        ("Residential Block", 10, "University", 10, "2024-09-05T08:00:00.000Z", 4, "Students only.", 2),
-        ("Residential Block", 10, "University", 10, "2024-09-05T08:00:00.000Z", -1, "Students only.", 2)
+        ("Main Street", 10, "Market Square", 10, "2025-06-15T15:00:00.000Z", 4, "Pick up near the cafe.", 3),
+        ("Downtown", 15, "Central Park", 15, "2025-06-20T09:30:00.000Z", 3, "Please arrive 5 minutes early.", 1),
+        ("Suburb", 5, "Local Mall", 5, "2025-07-01T12:00:00.000Z", 2, "Contact on arrival.", 2),
+        ("Office Area", 20, "Airport", 20, "2025-08-10T07:00:00.000Z", 6, "Extra space for luggage.", 5),
+        ("Residential Block", 10, "University", 10, "2025-09-05T08:00:00.000Z", 4, "Students only.", 2),
+        ("Residential Block", 10, "University", 10, "2025-09-05T08:00:00.000Z", -1, "Students only.", 2)
     ])
 def test_GivenInvalidRideIdWhenJoinRideRequestExpectFail(departure_location, pickup_radius, destination,
                                                          drop_radius,
@@ -291,11 +291,11 @@ def test_GivenNoRidesWhenGetMyRideRequestsExpectEmpty(client):
 @pytest.mark.parametrize(
     "departure_location, pickup_radius, destination, drop_radius, departure_datetime, available_seats, notes", [
         # Valid ride details
-        ("Main Street", 10, "Market Square", 10, "2024-06-15T15:00:00.000Z", 4, "Pick up near the cafe."),
-        ("Downtown", 15, "Central Park", 15, "2024-06-20T09:30:00.000Z", 3, "Please arrive 5 minutes early."),
-        ("Suburb", 5, "Local Mall", 5, "2024-07-01T12:00:00.000Z", 2, "Contact on arrival."),
-        ("Office Area", 20, "Airport", 20, "2024-08-10T07:00:00.000Z", 6, "Extra space for luggage."),
-        ("Residential Block", 10, "University", 10, "2024-09-05T08:00:00.000Z", 4, "Students only.")
+        ("Main Street", 10, "Market Square", 10, "2025-06-15T15:00:00.000Z", 4, "Pick up near the cafe."),
+        ("Downtown", 15, "Central Park", 15, "2025-06-20T09:30:00.000Z", 3, "Please arrive 5 minutes early."),
+        ("Suburb", 5, "Local Mall", 5, "2025-07-01T12:00:00.000Z", 2, "Contact on arrival."),
+        ("Office Area", 20, "Airport", 20, "2025-08-10T07:00:00.000Z", 6, "Extra space for luggage."),
+        ("Residential Block", 10, "University", 10, "2025-09-05T08:00:00.000Z", 4, "Students only.")
     ])
 def test_GivenNoRideRequestsWhenGetMyRideRequestsExpectEmpty(departure_location, pickup_radius, destination,
                                                              drop_radius,
@@ -319,10 +319,10 @@ def test_GivenNoRideRequestsWhenGetMyRideRequestsExpectEmpty(departure_location,
     "departure_location, pickup_radius, destination, drop_radius, departure_datetime, available_seats, notes, "
     "departure_location2, pickup_radius2, destination2, drop_radius2, departure_datetime2, available_seats2, notes2", [
         # Valid ride details
-        ("Main Street", 10, "Market Square", 10, "2024-06-15T15:00:00.000Z", 4, "Pick up near the cafe.",
-         "Downtown", 15, "Central Park", 15, "2024-06-20T09:30:00.000Z", 3, "Please arrive 5 minutes early."),
-        ("Suburb", 5, "Local Mall", 5, "2024-07-01T12:00:00.000Z", 2, "Contact on arrival.",
-         "Office Area", 20, "Airport", 20, "2024-08-10T07:00:00.000Z", 6, "Extra space for luggage."),
+        ("Main Street", 10, "Market Square", 10, "2025-06-15T15:00:00.000Z", 4, "Pick up near the cafe.",
+         "Downtown", 15, "Central Park", 15, "2025-06-20T09:30:00.000Z", 3, "Please arrive 5 minutes early."),
+        ("Suburb", 5, "Local Mall", 5, "2025-07-01T12:00:00.000Z", 2, "Contact on arrival.",
+         "Office Area", 20, "Airport", 20, "2025-08-10T07:00:00.000Z", 6, "Extra space for luggage."),
     ])
 def test_GivenNoRideRequestsTwoRidesWhenGetMyRideRequestsExpectEmpty(departure_location, pickup_radius, destination,
                                                                      drop_radius,
@@ -352,10 +352,10 @@ def test_GivenNoRideRequestsTwoRidesWhenGetMyRideRequestsExpectEmpty(departure_l
     "departure_location, pickup_radius, destination, drop_radius, departure_datetime, available_seats, notes, "
     "departure_location2, pickup_radius2, destination2, drop_radius2, departure_datetime2, available_seats2, notes2", [
         # Valid ride details
-        ("Main Street", 10, "Market Square", 10, "2024-06-15T15:00:00.000Z", 4, "Pick up near the cafe.",
-         "Downtown", 15, "Central Park", 15, "2024-06-20T09:30:00.000Z", 3, "Please arrive 5 minutes early."),
-        ("Suburb", 5, "Local Mall", 5, "2024-07-01T12:00:00.000Z", 2, "Contact on arrival.",
-         "Office Area", 20, "Airport", 20, "2024-08-10T07:00:00.000Z", 6, "Extra space for luggage."),
+        ("Main Street", 10, "Market Square", 10, "2025-06-15T15:00:00.000Z", 4, "Pick up near the cafe.",
+         "Downtown", 15, "Central Park", 15, "2025-06-20T09:30:00.000Z", 3, "Please arrive 5 minutes early."),
+        ("Suburb", 5, "Local Mall", 5, "2025-07-01T12:00:00.000Z", 2, "Contact on arrival.",
+         "Office Area", 20, "Airport", 20, "2025-08-10T07:00:00.000Z", 6, "Extra space for luggage."),
     ])
 def test_GivenNoRideRequestsTwoRidesTwoUsersWhenGetMyRideRequestsExpectEmpty(departure_location, pickup_radius,
                                                                              destination, drop_radius,
@@ -389,11 +389,11 @@ def test_GivenNoRideRequestsTwoRidesTwoUsersWhenGetMyRideRequestsExpectEmpty(dep
 @pytest.mark.parametrize(
     "departure_location, pickup_radius, destination, drop_radius, departure_datetime, available_seats, notes", [
         # Valid ride details
-        ("Main Street", 10, "Market Square", 10, "2024-06-15T15:00:00.000Z", 4, "Pick up near the cafe."),
-        ("Downtown", 15, "Central Park", 15, "2024-06-20T09:30:00.000Z", 3, "Please arrive 5 minutes early."),
-        ("Suburb", 5, "Local Mall", 5, "2024-07-01T12:00:00.000Z", 2, "Contact on arrival."),
-        ("Office Area", 20, "Airport", 20, "2024-08-10T07:00:00.000Z", 6, "Extra space for luggage."),
-        ("Residential Block", 10, "University", 10, "2024-09-05T08:00:00.000Z", 4, "Students only.")
+        ("Main Street", 10, "Market Square", 10, "2025-06-15T15:00:00.000Z", 4, "Pick up near the cafe."),
+        ("Downtown", 15, "Central Park", 15, "2025-06-20T09:30:00.000Z", 3, "Please arrive 5 minutes early."),
+        ("Suburb", 5, "Local Mall", 5, "2025-07-01T12:00:00.000Z", 2, "Contact on arrival."),
+        ("Office Area", 20, "Airport", 20, "2025-08-10T07:00:00.000Z", 6, "Extra space for luggage."),
+        ("Residential Block", 10, "University", 10, "2025-09-05T08:00:00.000Z", 4, "Students only.")
     ])
 def test_GivenGoodRequestWhenGetMyRideRequestsExpectSuccess(departure_location, pickup_radius, destination,
                                                              drop_radius,
@@ -420,10 +420,10 @@ def test_GivenGoodRequestWhenGetMyRideRequestsExpectSuccess(departure_location, 
     "departure_location, pickup_radius, destination, drop_radius, departure_datetime, available_seats, notes, "
     "departure_location2, pickup_radius2, destination2, drop_radius2, departure_datetime2, available_seats2, notes2, place", [
         # Valid ride details
-        ("Main Street", 10, "Market Square", 10, "2024-06-15T15:00:00.000Z", 4, "Pick up near the cafe.",
-         "Downtown", 15, "Central Park", 15, "2024-06-20T09:30:00.000Z", 3, "Please arrive 5 minutes early.",1),
-        ("Suburb", 5, "Local Mall", 5, "2024-07-01T12:00:00.000Z", 2, "Contact on arrival.",
-         "Office Area", 20, "Airport", 20, "2024-08-10T07:00:00.000Z", 6, "Extra space for luggage.",2),
+        ("Main Street", 10, "Market Square", 10, "2025-06-15T15:00:00.000Z", 4, "Pick up near the cafe.",
+         "Downtown", 15, "Central Park", 15, "2025-06-20T09:30:00.000Z", 3, "Please arrive 5 minutes early.",1),
+        ("Suburb", 5, "Local Mall", 5, "2025-07-01T12:00:00.000Z", 2, "Contact on arrival.",
+         "Office Area", 20, "Airport", 20, "2025-08-10T07:00:00.000Z", 6, "Extra space for luggage.",2),
     ])
 def test_GivenGoodRequestTwoRidesWhenGetMyRideRequestsExpectSuccess(departure_location, pickup_radius,
                                                                              destination, drop_radius,
@@ -465,10 +465,10 @@ def test_GivenGoodRequestTwoRidesWhenGetMyRideRequestsExpectSuccess(departure_lo
     "departure_location, pickup_radius, destination, drop_radius, departure_datetime, available_seats, notes, "
     "departure_location2, pickup_radius2, destination2, drop_radius2, departure_datetime2, available_seats2, notes2", [
         # Valid ride details
-        ("Main Street", 10, "Market Square", 10, "2024-06-15T15:00:00.000Z", 4, "Pick up near the cafe.",
-         "Downtown", 15, "Central Park", 15, "2024-06-20T09:30:00.000Z", 3, "Please arrive 5 minutes early."),
-        ("Suburb", 5, "Local Mall", 5, "2024-07-01T12:00:00.000Z", 2, "Contact on arrival.",
-         "Office Area", 20, "Airport", 20, "2024-08-10T07:00:00.000Z", 6, "Extra space for luggage.",),
+        ("Main Street", 10, "Market Square", 10, "2025-06-15T15:00:00.000Z", 4, "Pick up near the cafe.",
+         "Downtown", 15, "Central Park", 15, "2025-06-20T09:30:00.000Z", 3, "Please arrive 5 minutes early."),
+        ("Suburb", 5, "Local Mall", 5, "2025-07-01T12:00:00.000Z", 2, "Contact on arrival.",
+         "Office Area", 20, "Airport", 20, "2025-08-10T07:00:00.000Z", 6, "Extra space for luggage.",),
     ])
 def test_GivenTwoGoodRequestsWhenGetMyRideRequestsExpectSuccess(departure_location, pickup_radius,
                                                                              destination, drop_radius,
