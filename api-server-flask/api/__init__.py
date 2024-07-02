@@ -9,6 +9,7 @@ from flask import Flask
 from flask_cors import CORS
 
 from api.routes import rest_api
+from api.socketio_init import socketio
 from models import db
 
 app = Flask(__name__)
@@ -22,6 +23,9 @@ db.init_app(app)
 rest_api.init_app(app)
 
 CORS(app, supports_credentials=True)
+
+# Initialize SocketIO
+socketio.init_app(app)
 
 app.config.update(
     SESSION_COOKIE_SECURE=True,
@@ -67,3 +71,5 @@ def after_request(response):
             response.set_data(json.dumps(response_data))
         response.headers.add('Content-Type', 'application/json')
     return response
+
+from . import socketio_events

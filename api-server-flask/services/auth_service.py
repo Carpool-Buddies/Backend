@@ -1,7 +1,7 @@
 import random
 
 from api.config import BaseConfig
-from services import login_attempt_tracker
+from services import login_attempt_tracker, notification_service
 from services.user_validation import *
 from utils.response import Response
 
@@ -163,6 +163,9 @@ class AuthService:
 
             user_exists.set_jwt_auth_active(True)
             user_exists.save()
+
+            # Handle stored notifications and messages on login
+            notification_service.handle_login_notifications(user_exists.id)
 
             response = Response(success=True, message="User logged in successfully", status_code=200,
                                 data={"token": token, "user": user_exists.toJSON()})
