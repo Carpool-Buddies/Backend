@@ -44,7 +44,8 @@ update_user_details_model = auth_ns.model('UserEdit', {
 })
 
 get_code_model = auth_ns.model('GetCodeModel', {"email": fields.String(required=True, min_length=1, max_length=32)})
-enter_code_model = auth_ns.model('EnterCodeModel', {"code": fields.String(required=True, min_length=1, max_length=32)})
+enter_code_model = auth_ns.model('EnterCodeModel', {"code": fields.String(required=True, min_length=1, max_length=32),
+                                                    "email": fields.String(required=True, min_length=1, max_length=32)})
 
 """
     Flask-Restx routes
@@ -83,8 +84,6 @@ class GetCode(Resource):
         req_data = request.get_json()
         _email = req_data.get("email").lower().strip()
         resp = auth.getCode(_email)
-        if int(resp[1]) == 200:
-            session["email"] = resp[0]["email"]
         return resp
 
 
@@ -101,8 +100,6 @@ class ConfirmUser(Resource):
             response = Response(success=False, message="Unauthorized access to user's confirmation", status_code=403)
             return response.to_tuple()
         resp = auth.getCode(_id=user_id)
-        if int(resp[1]) == 200:
-            session["email"] = resp[0]["email"]
         return resp
 
 
@@ -115,14 +112,9 @@ class EnterCode(Resource):
     @auth_ns.expect(enter_code_model, validate=True)
     def post(self):
         req_data = request.get_json()
-        if "email" not in session:
-            return {"success": False,
-                    "msg": "Code not sent to the email"}, 400
-        _email = session["email"]
+        _email =req_data.get("email").lower().strip()
         _code = req_data.get("code")
         resp = auth.enterCode(_email, _code)
-        if resp[0]['success']:
-            session["verify"] = (_email, datetime.now())
         return resp
 
 

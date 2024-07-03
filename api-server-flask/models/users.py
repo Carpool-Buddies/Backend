@@ -53,7 +53,7 @@ class Users(db.Model):
 
     def approve(self):
         self.approved = True
-        self.save()
+        db.session.commit()
 
     def update_field(self, field, value):
         if hasattr(self, field):

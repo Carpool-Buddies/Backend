@@ -13,7 +13,7 @@ from datetime import datetime, timedelta, timezone
 from models.join_ride_requests import JoinRideRequests
 import jwt
 
-from models import Users, JWTTokenBlocklist, db, Rides
+from models import Users, JWTTokenBlocklist, db, Rides, VerifiedUsers
 from models.verification_codes import VerificationCodes, time_left
 import os
 
@@ -129,6 +129,7 @@ class AuthService:
                     "msg": "This email does not exist."}, 404
         try:
             VerificationCodes.verify_user(_email, _code)
+            VerifiedUsers.create_verified_user(_email)
         except Exception as e:
             if len(e.args) == 1:
                 return {"success": False,
