@@ -29,7 +29,8 @@ signup_model = auth_ns.model('SignUpModel', {"email": fields.String(required=Tru
 
 forget_password_model = auth_ns.model('ForgetPasswordModel',
                                       {"password": fields.String(required=True, min_length=6, max_length=32),
-                                       "confirmPassword": fields.String(required=True, min_length=6, max_length=32)})
+                                       "confirmPassword": fields.String(required=True, min_length=6, max_length=32),
+                                       "email": fields.String(required=True, min_length=4, max_length=64)})
 
 login_model = auth_ns.model('LoginModel', {"email": fields.String(required=True, min_length=4, max_length=64),
                                            "password": fields.String(required=True, min_length=4, max_length=16)
@@ -126,21 +127,12 @@ class ForgetPassword(Resource):
 
     @auth_ns.expect(forget_password_model, validate=True)
     def post(self):
-        if "verify" not in session:
-            return {"success": False,
-                    "msg": "Did not enter confirmation code"}, 401
-        _email = session["email"]
-        verify_user = session["verify"]
-        if not _email == verify_user[0]:
-            return {"success": False,
-                    "msg": "Not verified on last user"}, 401
+
         req_data = request.get_json()
         password = req_data.get("password")
         confirmPassword = req_data.get("confirmPassword")
-        resp = auth.forget_password(verify_user, password, confirmPassword)
-        if resp[1] == 200 or resp[1] == 403:
-            session.pop("email")
-            session.pop("verify")
+        _email = req_data.get("email")
+        resp = auth.forget_password(_email, password, confirmPassword)
         return resp
 
 
