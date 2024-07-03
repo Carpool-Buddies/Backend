@@ -11,3 +11,4 @@ from .jwt_token_blocklist import JWTTokenBlocklist
 from .ride_offers import RideOffers
 from .verification_codes import VerificationCodes
 from .verified_users import VerifiedUsers
+from .rating_requests import RatingRequest

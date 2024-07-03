@@ -5,7 +5,7 @@ from services.future_ride_post import FutureRidePost
 from utils.response import Response
 
 from sqlalchemy.exc import SQLAlchemyError
-
+from models.rating_requests import RatingRequest
 
 class DriverService:
 
@@ -288,6 +288,7 @@ class DriverService:
                 if not ride.start_ride():
                     raise ValueError("Error starting ride")
 
+
                 # TODO: Send notification to all passengers subscribed to the ride
                 # for passenger in ride.passengers:
                 #     notify_passenger(passenger.id, 'The ride has started')
@@ -338,6 +339,8 @@ class DriverService:
                 # TODO: Send notification to all passengers subscribed to the ride
                 # for passenger in ride.passengers:
                 #     notify_passenger(passenger.id, 'The ride has ended')
+                approved_passengers = DriverService.get_join_requests_for_ride(ride.id, "accept")
+                RatingRequest.create_rating_requests(ride,approved_passengers[0]["join_ride_requests"])
 
             response = Response(success=True, message="Ride ended successfully", status_code=200)
             return response.to_tuple()
