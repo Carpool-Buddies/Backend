@@ -54,7 +54,7 @@ class Rides(db.Model):
         """
         try:
             self.status = 'InProgress'
-            self.save()
+            db.session.commit()
         except Exception as e:
             print(f"Error starting ride: {str(e)}")
             db.session.rollback()

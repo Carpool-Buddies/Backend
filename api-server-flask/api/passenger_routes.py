@@ -48,6 +48,15 @@ passenger_search_rides = passenger_ns.model('SearchRides', {
     "available_seats": fields.Integer(required=False),
     "delta_hours": fields.Integer(required=False, default=5)
 })
+passenger_rate_ride = passenger_ns.model('RateRide', {
+    "rating_id": fields.Integer(required=True),
+    "rating": fields.Integer(required=True),
+    "comments": fields.String(required=True),
+})
+
+passenger_get_user_rating = passenger_ns.model('GetUserRating', {
+    "user_id": fields.Integer(required=True)
+})
 
 """
     Flask-Restx routes
@@ -162,3 +171,86 @@ class GetMyRideRequests(Resource):
                             status_code=200,
                             data={"data":resp})
         return response.to_tuple()
+
+
+@passenger_ns.doc(security='JWT Bearer')
+@passenger_ns.route('/rating/<int:user_id>/rate-ride')
+class RateRide(Resource):
+
+
+    @passenger_ns.expect(passenger_rate_ride, validate=True)
+    @token_required
+    def post(self, current_user, user_id):
+        if current_user.id != user_id:
+            response = Response(success=False,
+                                message=f"Error Rate Ride: Unauthorized access to user's Ratings",
+                                status_code=403)
+            return response.to_tuple()
+        req_data = request.get_json()
+        rating_id = req_data.get("rating_id")
+        rating = req_data.get("rating")
+        comments = req_data.get("comments")
+        try:
+            return PassengerService.rate_ride(rating_id, rating, comments)
+        except Exception as e:
+            response = Response(success=False,
+                                message=f"Error Rate Ride: {str(e)}",
+                                status_code=403)
+            return response.to_tuple()
+
+
+
+@passenger_ns.doc(security='JWT Bearer')
+@passenger_ns.route('/rating/get-rating')
+class GetUserRating(Resource):
+
+
+    @passenger_ns.expect(passenger_get_user_rating, validate=True)
+    @token_required
+    def post(self, current_user):
+        req_data = request.get_json()
+        user_id = req_data.get("user_id")
+        try:
+            return PassengerService.get_user_rating(user_id)
+        except Exception as e:
+            response = Response(success=False,
+                                message=f"Error Get User Rating: {str(e)}",
+                                status_code=403)
+            return response.to_tuple()
+
+@passenger_ns.doc(security='JWT Bearer')
+@passenger_ns.route('/rating/get-comments')
+class GetUserComments(Resource):
+
+    @passenger_ns.expect(passenger_get_user_rating, validate=True)
+    @token_required
+    def post(self, current_user):
+        req_data = request.get_json()
+        user_id = req_data.get("user_id")
+        try:
+            return PassengerService.get_user_comments(user_id)
+        except Exception as e:
+            response = Response(success=False,
+                                message=f"Error Get User Rating: {str(e)}",
+                                status_code=403)
+            return response.to_tuple()
+
+
+@passenger_ns.doc(security='JWT Bearer')
+@passenger_ns.route('/rating/<int:user_id>/my-ratings')
+class GetMyRating(Resource):
+
+    @token_required
+    def Get(self, current_user,user_id):
+        if current_user.id != user_id:
+            response = Response(success=False,
+                                message=f"Error Rate Ride: Unauthorized access to user's Ratings",
+                                status_code=403)
+            return response.to_tuple()
+        try:
+            return PassengerService.get_my_ratings(user_id)
+        except Exception as e:
+            response = Response(success=False,
+                                message=f"Error Get My Rating: {str(e)}",
+                                status_code=403)
+            return response.to_tuple()

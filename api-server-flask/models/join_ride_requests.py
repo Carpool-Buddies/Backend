@@ -62,3 +62,5 @@ class JoinRideRequests(db.Model):
             db.session.commit()
         response = Response(success=True, message="OK", status_code=200)
         return response.to_tuple()
+
+

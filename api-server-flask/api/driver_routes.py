@@ -35,7 +35,8 @@ update_ride_model = driver_ns.model('UpdateRideModel', {"departure_location": fi
 
 get_join_requests_model = driver_ns.model('GetJoinRequestsModel', {"request_status": fields.String(required=False)})
 
-ride_request_model = driver_ns.model('RideRequestModel', {'request_id': fields.Integer(required=False)
+ride_request_model = driver_ns.model('RideRequestModel', {'request_id': fields.Integer(required=False),
+                                                          'status_update': fields.String(required=True)
                                                         })
 
 """
