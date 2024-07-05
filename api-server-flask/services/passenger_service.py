@@ -186,7 +186,7 @@ class PassengerService:
             raise Exception("cannot get the rides", 404)
 
     @staticmethod
-    def rate_ride(rating_id, rating, comment):
+    def rate_ride(user_id,rating_id, rating, comment):
         rating_object = RatingRequest.get_by_id(rating_id)
         if not rating_object:
             return {"success": False,
@@ -197,6 +197,9 @@ class PassengerService:
         if rating < 0 or rating > 5:
             return {"success": False,
                     "msg": "the rating must be number from 0 to 5"}, 403
+        if not(rating_object.rater_id == user_id):
+            return {"success": False,
+                    "msg": "cannot rate others ratings"}, 403
         try:
             rating_object.rate(rating,comment)
             response = Response(success=True, message="Rated successfully", status_code=200,)

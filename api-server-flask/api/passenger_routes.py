@@ -191,7 +191,7 @@ class RateRide(Resource):
         rating = req_data.get("rating")
         comments = req_data.get("comments")
         try:
-            return PassengerService.rate_ride(rating_id, rating, comments)
+            return PassengerService.rate_ride(user_id,rating_id, rating, comments)
         except Exception as e:
             response = Response(success=False,
                                 message=f"Error Rate Ride: {str(e)}",
