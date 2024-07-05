@@ -191,7 +191,7 @@ class PassengerService:
         if not rating_object:
             return {"success": False,
                     "msg": "This rating does not exist."}, 404
-        if rating_object.rating < 0:
+        if rating_object.rating > 0:
             return {"success": False,
                     "msg": "this ride already rated"}, 403
         if rating < 0 or rating > 5:

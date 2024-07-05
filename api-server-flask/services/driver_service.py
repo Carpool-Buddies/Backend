@@ -205,7 +205,7 @@ class DriverService:
 
                 elif status_update == 'reject':
                     # Update the status of the ride request to rejected
-                    ride_request.status = 'rejected'
+                    ride_request.status = 'reject'
 
                     # TODO: Notify the passenger about the rejection
                     # notify_passenger(ride_request.passenger_id, 'rejected')
@@ -339,7 +339,7 @@ class DriverService:
             # TODO: Send notification to all passengers subscribed to the ride
             # for passenger in ride.passengers:
             #     notify_passenger(passenger.id, 'The ride has ended')
-            approved_passengers = DriverService.get_join_requests_for_ride(ride.id, "accept")
+            approved_passengers = DriverService.get_join_requests_for_ride(ride.id, "accepted")
             RatingRequest.create_rating_requests(ride,approved_passengers[0]["join_ride_requests"])
 
             response = Response(success=True, message="Ride ended successfully", status_code=200)

@@ -40,9 +40,10 @@ class RatingRequest(db.Model):
     @staticmethod
     def create_rating_requests(ride,requests):
         for r in requests:
-            rating = RatingRequest(rater_id=r.passenger_id,rated_id=ride.driver_id,ride_id=ride.id)
+            print(r)
+            rating = RatingRequest(rater_id=r["passenger_id"],rated_id=ride.driver_id,ride_id=ride.id)
             rating.save()
-            rating = RatingRequest(rater_id=ride.driver_id,rated_id=r.passenger_id,ride_id=ride.id)
+            rating = RatingRequest(rater_id=ride.driver_id,rated_id=r["passenger_id"],ride_id=ride.id)
             rating.save()
 
     def rate(self,rating,comment):

@@ -241,7 +241,7 @@ class GetUserComments(Resource):
 class GetMyRating(Resource):
 
     @token_required
-    def Get(self, current_user,user_id):
+    def get(self, current_user,user_id):
         if current_user.id != user_id:
             response = Response(success=False,
                                 message=f"Error Rate Ride: Unauthorized access to user's Ratings",
