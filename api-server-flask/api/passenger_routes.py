@@ -49,6 +49,7 @@ passenger_search_rides = passenger_ns.model('SearchRides', {
     "delta_hours": fields.Integer(required=False, default=5)
 })
 
+
 """
     Flask-Restx routes
 """
@@ -162,3 +163,7 @@ class GetMyRideRequests(Resource):
                             status_code=200,
                             data={"data":resp})
         return response.to_tuple()
+
+
+
+

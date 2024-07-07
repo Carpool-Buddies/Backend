@@ -5,7 +5,7 @@ from services.future_ride_post import FutureRidePost
 from utils.response import Response
 
 from sqlalchemy.exc import SQLAlchemyError
-
+from models.rating_requests import RatingRequest
 
 class DriverService:
 
@@ -205,7 +205,7 @@ class DriverService:
 
                 elif status_update == 'reject':
                     # Update the status of the ride request to rejected
-                    ride_request.status = 'rejected'
+                    ride_request.status = 'reject'
 
                     # TODO: Notify the passenger about the rejection
                     # notify_passenger(ride_request.passenger_id, 'rejected')
@@ -269,24 +269,25 @@ class DriverService:
         """
 
         try:
-            # Start a transaction
-            with db.session.begin(subtransactions=True):
-                # Retrieve the ride
-                ride = Rides.get_by_id(ride_id)
+            # # Start a transaction
+            # with db.session.begin(subtransactions=True):
+            # Retrieve the ride
+            ride = Rides.get_by_id(ride_id)
 
-                # Check if the user is the driver of the ride
-                if ride.driver_id != current_user.id:
-                    raise ValueError("Unauthorized: only the driver can start the ride")
+            # Check if the user is the driver of the ride
+            if ride.driver_id != current_user.id:
+                raise ValueError("Unauthorized: only the driver can start the ride")
 
-                # Check if the departure time is close to the current time (within 30 minutes)
-                now = datetime.utcnow()
-                if not (ride.departure_datetime - timedelta(minutes=30) <= now <= ride.departure_datetime + timedelta(
-                        minutes=30)):
-                    raise ValueError("Cannot start the ride: it's not within the allowed time window")
+            # Check if the departure time is close to the current time (within 30 minutes)
+            now = datetime.now()
+            if not (ride.departure_datetime - timedelta(minutes=30) <= now <= ride.departure_datetime + timedelta(
+                    minutes=30)):
+                raise ValueError("Cannot start the ride: it's not within the allowed time window")
 
-                # Update the ride status to 'InProgress'
-                if not ride.start_ride():
-                    raise ValueError("Error starting ride")
+            # Update the ride status to 'InProgress'
+            if not ride.start_ride():
+                raise ValueError("Error starting ride")
+
 
                 # TODO: Send notification to all passengers subscribed to the ride
                 # for passenger in ride.passengers:
@@ -319,25 +320,27 @@ class DriverService:
 
         try:
             # Start a transaction
-            with db.session.begin(subtransactions=True):
-                # Retrieve the ride
-                ride = Rides.get_by_id(ride_id)
+            # with db.session.begin(subtransactions=True):
+            #     # Retrieve the ride
+            ride = Rides.get_by_id(ride_id)
 
-                # Check if the user is the driver of the ride
-                if ride.driver_id != current_user.id:
-                    raise ValueError("Unauthorized: only the driver can end the ride")
+            # Check if the user is the driver of the ride
+            if ride.driver_id != current_user.id:
+                raise ValueError("Unauthorized: only the driver can end the ride")
 
-                # Check if the ride is in progress
-                if ride.status != 'InProgress':
-                    raise ValueError("Cannot end the ride: it is not currently in progress")
+            # Check if the ride is in progress
+            if ride.status != 'InProgress':
+                raise ValueError("Cannot end the ride: it is not currently in progress")
 
-                # Update the ride status to 'Completed'
-                if not ride.end_ride():
-                    raise ValueError("Error ending ride")
+            # Update the ride status to 'Completed'
+            if not ride.end_ride():
+                raise ValueError("Error ending ride")
 
-                # TODO: Send notification to all passengers subscribed to the ride
-                # for passenger in ride.passengers:
-                #     notify_passenger(passenger.id, 'The ride has ended')
+            # TODO: Send notification to all passengers subscribed to the ride
+            # for passenger in ride.passengers:
+            #     notify_passenger(passenger.id, 'The ride has ended')
+            approved_passengers = DriverService.get_join_requests_for_ride(ride.id, "accepted")
+            RatingRequest.create_rating_requests(ride,approved_passengers[0]["join_ride_requests"])
 
             response = Response(success=True, message="Ride ended successfully", status_code=200)
             return response.to_tuple()

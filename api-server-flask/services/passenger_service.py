@@ -1,7 +1,8 @@
-from models import RideOffers, JoinRideRequests, db
+from models import RideOffers, JoinRideRequests, db, Users
 
 from services.specifications import *
 from utils.response import Response
+from models.rating_requests import RatingRequest
 
 from geopy.distance import geodesic
 from sqlalchemy.exc import IntegrityError
@@ -183,3 +184,7 @@ class PassengerService:
             return [serializeResult(x) for x in results]
         except Exception as e:
             raise Exception("cannot get the rides", 404)
+
+
+
+
