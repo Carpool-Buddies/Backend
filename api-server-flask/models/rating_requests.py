@@ -15,7 +15,7 @@ class RatingRequest(db.Model):
     comments = db.Column(db.Text, nullable=True,default="")
 
     __table_args__ = (
-        UniqueConstraint('rater_id', 'rated_id','ride_id', name='uq_ride_passenger'),
+        UniqueConstraint('rater_id', 'rated_id','ride_id', name='uq_ride_rating'),
     )
 
 
@@ -24,6 +24,10 @@ class RatingRequest(db.Model):
 
     def save(self):
         db.session.add(self)
+        db.session.commit()
+
+    def remove(self):
+        db.session.delete(self)
         db.session.commit()
 
     def update_field(self, field, value):
@@ -55,7 +59,7 @@ class RatingRequest(db.Model):
         # Query to get the average rating for the user with ratings above 0
         avg_rating = db.session.query(func.avg(RatingRequest.rating)).filter(
             RatingRequest.rated_id == user_id,
-            RatingRequest.rating > 0
+            RatingRequest.rating >= 0
         ).scalar()
 
         # Return the average rating if found, otherwise return the default rating of 3.0
@@ -72,7 +76,7 @@ class RatingRequest(db.Model):
             Users, RatingRequest.rater_id == Users.id
         ).filter(
             RatingRequest.rated_id == user_id,
-            RatingRequest.rating > 0
+            RatingRequest.rating >= 0
         ).all()
 
         ratings_list = [{
