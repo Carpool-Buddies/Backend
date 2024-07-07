@@ -13,7 +13,7 @@ from datetime import datetime, timedelta, timezone
 from models.join_ride_requests import JoinRideRequests
 import jwt
 
-from models import Users, JWTTokenBlocklist, db, Rides
+from models import Users, JWTTokenBlocklist, db, Rides, VerifiedUsers
 from models.verification_codes import VerificationCodes, time_left
 import os
 
@@ -129,6 +129,7 @@ class AuthService:
                     "msg": "This email does not exist."}, 404
         try:
             VerificationCodes.verify_user(_email, _code)
+            VerifiedUsers.create_verified_user(_email)
         except Exception as e:
             if len(e.args) == 1:
                 return {"success": False,
@@ -203,11 +204,11 @@ class AuthService:
         - success if the user verified in time and the passwords valid and the same
         - error and message if somthing else happened
         """
-        user_exists = Users.get_by_email(verify_user[0])
+        user_exists = VerifiedUsers.get_by_email(verify_user)
         if not user_exists:
             return {"success": False,
                     "msg": "This email does not exist."}, 404
-        if not time_left(verify_user[1], datetime.now()):
+        if not time_left(user_exists.date_send, datetime.now()):
             return {"success": False,
                     "msg": "Time has expired"}, 403
         try:
@@ -216,6 +217,8 @@ class AuthService:
             return {"success": False,
                     "msg": str(e)}, 400
         if password == confirmPassword:
+            user_exists.remove()
+            user_exists = Users.get_by_email(user_exists.email)
             user_exists.set_password(password)
             user_exists.save()
             return {"success": True,
