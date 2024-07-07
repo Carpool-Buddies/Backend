@@ -51,7 +51,7 @@ class JoinRideRequests(db.Model):
             result = db.session.query(JoinRideRequests.id).join(
                 Rides, Rides.id == JoinRideRequests.ride_id
             ).filter(
-                JoinRideRequests.status != 'accepted',
+                JoinRideRequests.status != 'accept',
                 Rides.departure_datetime < datetime.now()
             ).all()
             ids_to_delete = [row.id for row in result]
@@ -62,3 +62,5 @@ class JoinRideRequests(db.Model):
             db.session.commit()
         response = Response(success=True, message="OK", status_code=200)
         return response.to_tuple()
+
+

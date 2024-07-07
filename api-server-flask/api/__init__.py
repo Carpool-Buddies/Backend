@@ -42,7 +42,7 @@ def initialize_database():
         # fallback to SQLite
         BASE_DIR = os.path.abspath(os.path.dirname(__file__))
         app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(BASE_DIR,
-                                                                                                      'db.sqlite3')
+                                                                                                      'db.sqlite3?check_same_thread=False')
 
         print('> Fallback to SQLite ')
         db.create_all()

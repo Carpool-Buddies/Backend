@@ -2,8 +2,7 @@ name: Deploy to EC2
 
 on:
   push:
-    branches:
-      - master
+    branches: [ "master" ]
 
 jobs:
   deploy:
@@ -20,7 +19,7 @@ jobs:
 
     - name: Deploy to EC2
       run: |
-        ssh -o StrictHostKeyChecking=no ubuntu@${{ your_ec2_instance_ip }} << 'EOF'
+        ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.YOUR_EC2_INSTANCE_IP }} << 'EOF'
         cd /home/ubuntu/Backend
         git pull origin master
         source /home/ubuntu/Backend/api-server-flask/venv/bin/activate
