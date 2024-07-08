@@ -91,7 +91,8 @@ class Users(db.Model):
                 "first_name": self.first_name,
                 "last_name": self.last_name,
                 "phone_number": self.phone_number,
-                "approved": self.approved
+                "approved": self.approved,
+                "birthday": self.birthday
                 }
 
     def update_user_details(self, new_details):

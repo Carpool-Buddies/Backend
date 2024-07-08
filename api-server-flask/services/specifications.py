@@ -112,14 +112,14 @@ class DepartureDateSpecification(Specification):
 
     def is_satisfied_by(self, item) -> bool:
         current_time = datetime.now(self.departure_datetime.tzinfo)  # Ensure current_time has the same timezone
-        lower_bound = max(self.departure_datetime - timedelta(hours=self.delta_hours), current_time)
-        upper_bound = self.departure_datetime + timedelta(hours=self.delta_hours)
+        lower_bound = max(self.departure_datetime - timedelta(minutes=int(self.delta_hours*60)), current_time)
+        upper_bound = self.departure_datetime + timedelta(minutes=int(self.delta_hours*60))
         return lower_bound <= item.departure_datetime <= upper_bound
 
     def apply(self, query: Query) -> Query:
         current_time = datetime.now(self.departure_datetime.tzinfo)  # Ensure current_time has the same timezone
-        lower_bound = max(self.departure_datetime - timedelta(hours=self.delta_hours), current_time)
-        upper_bound = self.departure_datetime + timedelta(hours=self.delta_hours)
+        lower_bound = max(self.departure_datetime - timedelta(minutes=int(self.delta_hours*60)), current_time)
+        upper_bound = self.departure_datetime + timedelta(minutes=int(self.delta_hours*60))
         return query.filter(
             Rides.departure_datetime.between(lower_bound, upper_bound)
         )
