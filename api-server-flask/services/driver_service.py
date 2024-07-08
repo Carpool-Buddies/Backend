@@ -205,7 +205,7 @@ class DriverService:
 
                 elif status_update == 'reject':
                     # Update the status of the ride request to rejected
-                    ride_request.status = 'reject'
+                    ride_request.status = 'rejected'
 
                     # TODO: Notify the passenger about the rejection
                     # notify_passenger(ride_request.passenger_id, 'rejected')
