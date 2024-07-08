@@ -21,6 +21,8 @@ jobs:
       run: |
         ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.YOUR_EC2_INSTANCE_IP }} << 'EOF'
         cd /home/ubuntu/Backend
+        git add .
+        git commit -m "Ready to deploy"
         git pull origin master
         source /home/ubuntu/Backend/api-server-flask/venv/bin/activate
         /home/ubuntu/Backend/api-server-flask/venv/bin/pip install -r /home/ubuntu/Backend/api-server-flask/requirements.txt
