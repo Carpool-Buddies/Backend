@@ -280,8 +280,7 @@ class DriverService:
 
             # Check if the departure time is close to the current time (within 30 minutes)
             now = datetime.now()
-            if not (ride.departure_datetime - timedelta(minutes=30) <= now <= ride.departure_datetime + timedelta(
-                    minutes=30)):
+            if not (ride.departure_datetime - timedelta(minutes=30) <= now):
                 raise ValueError("Cannot start the ride: it's not within the allowed time window")
 
             # Update the ride status to 'InProgress'
