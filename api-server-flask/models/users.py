@@ -92,7 +92,7 @@ class Users(db.Model):
                 "last_name": self.last_name,
                 "phone_number": self.phone_number,
                 "approved": self.approved,
-                "birthday": self.birthday
+                "birthday": str(self.birthday)
                 }
 
     def update_user_details(self, new_details):
@@ -120,27 +120,3 @@ class Users(db.Model):
             print(f"Error updating user details: {str(e)}")
             db.session.rollback()
             raise Exception("Failed to update user details") from e
-
-    # def update_user_details(self, new_details):
-    #     """
-    #     Updates the user details with new information.
-    #
-    #     Parameters:
-    #     - new_details: dict, a dictionary containing the updated details for the user
-    #
-    #     Raises:
-    #     - Exception: If an error occurs during the update process
-    #     """
-    #     try:
-    #         for key, value in new_details.items():
-    #             if key == "password":
-    #                 self.set_password(value)
-    #             # if key == "birthday":
-    #             #     value = datetime.strptime(value, '%Y-%m-%d')
-    #             else:
-    #                 setattr(self, key, value)
-    #         self.save()
-    #     except Exception as e:
-    #         print(f"Error updating user details: {str(e)}")
-    #         db.session.rollback()
-    #         raise Exception("Failed to update user details") from e
