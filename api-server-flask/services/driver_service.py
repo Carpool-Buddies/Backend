@@ -205,7 +205,7 @@ class DriverService:
 
                 elif status_update == 'reject':
                     # Update the status of the ride request to rejected
-                    ride_request.status = 'reject'
+                    ride_request.status = 'rejected'
 
                     # TODO: Notify the passenger about the rejection
                     # notify_passenger(ride_request.passenger_id, 'rejected')
@@ -280,8 +280,7 @@ class DriverService:
 
             # Check if the departure time is close to the current time (within 30 minutes)
             now = datetime.now()
-            if not (ride.departure_datetime - timedelta(minutes=30) <= now <= ride.departure_datetime + timedelta(
-                    minutes=30)):
+            if not (ride.departure_datetime - timedelta(minutes=30) <= now):
                 raise ValueError("Cannot start the ride: it's not within the allowed time window")
 
             # Update the ride status to 'InProgress'

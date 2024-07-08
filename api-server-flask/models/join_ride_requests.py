@@ -51,7 +51,7 @@ class JoinRideRequests(db.Model):
             result = db.session.query(JoinRideRequests.id).join(
                 Rides, Rides.id == JoinRideRequests.ride_id
             ).filter(
-                JoinRideRequests.status != 'accept',
+                JoinRideRequests.status != 'accepted',
                 Rides.departure_datetime < datetime.now()
             ).all()
             ids_to_delete = [row.id for row in result]
