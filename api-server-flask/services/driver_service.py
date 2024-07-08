@@ -352,3 +352,39 @@ class DriverService:
             db.session.rollback()
             response = Response(success=False, message="Error ending ride", status_code=500)
             return response.to_tuple()
+
+    @staticmethod
+    def delete_ride(current_user, ride_id):
+        """
+        Deletes a ride if the user is the driver.
+
+        Parameters:
+        - current_user: User, the user attempting to delete the ride
+        - ride_id: int, the ID of the ride to be deleted
+
+        Returns:
+        - response: tuple, a response object containing success status and message
+        """
+        try:
+            # Retrieve the ride
+            ride = Rides.query.get_or_404(ride_id)
+
+            # Check if the user is the driver of the ride
+            if ride.driver_id != current_user.id:
+                raise ValueError("Unauthorized: only the driver can delete the ride")
+
+            # Delete the ride
+            db.session.delete(ride)
+            db.session.commit()
+
+            response = Response(success=True, message="Ride deleted successfully", status_code=200)
+            return response.to_tuple()
+
+        except ValueError as ve:
+            response = Response(success=False, message=str(ve), status_code=400)
+            return response.to_tuple()
+        except SQLAlchemyError as e:
+            print(f"Error deleting ride: {str(e)}")
+            db.session.rollback()
+            response = Response(success=False, message="Error deleting ride", status_code=500)
+            return response.to_tuple()

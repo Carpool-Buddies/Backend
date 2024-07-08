@@ -237,3 +237,28 @@ class EndRide(Resource):
         except Exception as e:
             response = Response(success=False, message=str(e), status_code=500)
             return response.to_tuple()
+
+@driver_ns.doc(security='JWT Bearer')
+@driver_ns.route('/<int:user_id>/rides/<int:ride_id>/delete')
+class DeleteRide(Resource):
+    """
+    Allows drivers to end a ride.
+    """
+
+    @token_required
+    def post(self, current_user, user_id, ride_id):
+        """
+        Deletes a ride if the user is the driver.
+        """
+        try:
+            # Check if the current user is authorized to end the ride
+            if current_user.id != user_id:
+                response = Response(success=False, message="Unauthorized access to end the ride", status_code=403)
+                return response.to_tuple()
+
+            # End the ride using DriverService
+            return DriverService.delete_ride(current_user, ride_id)
+
+        except Exception as e:
+            response = Response(success=False, message=str(e), status_code=500)
+            return response.to_tuple()
