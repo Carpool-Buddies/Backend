@@ -51,7 +51,7 @@ class FutureRidePost:
             Rides.departure_datetime >= five_hours_before
         ).order_by(Rides.departure_datetime.desc()).first()
 
-        if last_ride and last_ride.ride_status != 'Completed':
+        if last_ride and last_ride.status != 'Completed':
             return True
 
         return False
