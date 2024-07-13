@@ -64,15 +64,15 @@ class RatingService:
                     "msg": "cannot get user comments: " + str(e)}, 403
 
     @staticmethod
-    def get_my_ratings(user_id):
+    def get_my_ratings(user_id, ride_id=None):
         user_exists = Users.get_by_id(user_id)
         if not user_exists:
             return {"success": False,
                     "msg": "This user does not exist."}, 404
         try:
-            my_ratings = RatingRequest.get_pending_ratings(user_id)
+            my_ratings = RatingRequest.get_pending_ratings(user_id, ride_id)
             response = Response(success=True, message="get my ratings successfully", status_code=200,
-                                data={"my ratings": my_ratings})
+                                data={"my_ratings": my_ratings})
             return response.to_tuple()
         except Exception as e:
             return {"success": False,
@@ -97,5 +97,3 @@ class RatingService:
         except Exception as e:
             return {"success": False,
                     "msg": "failed to remove the rating"}, 403
-
-
