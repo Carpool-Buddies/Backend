@@ -1,6 +1,6 @@
 from datetime import datetime
 # from join_ride_requests import JoinRideRequests
-from sqlalchemy import UniqueConstraint
+from sqlalchemy import UniqueConstraint, case
 from sqlalchemy import func
 from utils.response import Response
 from . import db, Users
@@ -52,13 +52,23 @@ class RatingRequest(db.Model):
 
     @staticmethod
     def get_average_rating(user_id):
-        avg_rating, rating_count = db.session.query(
-            func.avg(RatingRequest.rating).filter(RatingRequest.rating > 0).label('average_rating'),
-            func.count(RatingRequest.rating).label('rating_count')
+        query = db.session.query(
+            func.avg(
+                case(
+                    [(RatingRequest.rating > 0, RatingRequest.rating)],
+                    else_=None
+                )
+            ).label('average_rating'),
+            func.count(
+                case(
+                    [(RatingRequest.rating > 0, RatingRequest.rating)],
+                    else_=None
+                )
+            ).label('rating_count')
         ).filter(
             RatingRequest.rated_id == user_id,
-            RatingRequest.rating > 0
-        ).first()
+        )
+        avg_rating, rating_count = query.first()
 
         # If there are no ratings, set default values
         if avg_rating is None:
