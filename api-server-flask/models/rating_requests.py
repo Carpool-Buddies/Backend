@@ -11,16 +11,12 @@ class RatingRequest(db.Model):
     rater_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     rated_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     ride_id = db.Column(db.Integer, db.ForeignKey('rides.id'), nullable=False)
-    rating = db.Column(db.Integer, nullable=False,default=-1)
-    comments = db.Column(db.Text, nullable=True,default="")
+    rating = db.Column(db.Integer, nullable=False, default=-1)
+    comments = db.Column(db.Text, nullable=True, default="")
 
     __table_args__ = (
-        UniqueConstraint('rater_id', 'rated_id','ride_id', name='uq_ride_rating'),
+        UniqueConstraint('rater_id', 'rated_id', 'ride_id', name='uq_ride_rating'),
     )
-
-
-
-
 
     def save(self):
         db.session.add(self)
@@ -42,28 +38,38 @@ class RatingRequest(db.Model):
         return cls.query.get_or_404(id)
 
     @staticmethod
-    def create_rating_requests(ride,requests):
+    def create_rating_requests(ride, requests):
         for r in requests:
             print(r)
-            rating = RatingRequest(rater_id=r["passenger_id"],rated_id=ride.driver_id,ride_id=ride.id)
+            rating = RatingRequest(rater_id=r["passenger_id"], rated_id=ride.driver_id, ride_id=ride.id)
             rating.save()
-            rating = RatingRequest(rater_id=ride.driver_id,rated_id=r["passenger_id"],ride_id=ride.id)
+            rating = RatingRequest(rater_id=ride.driver_id, rated_id=r["passenger_id"], ride_id=ride.id)
             rating.save()
 
-    def rate(self,rating,comment):
-        self.update_field("rating",rating)
-        self.update_field("comments",comment)
+    def rate(self, rating, comment):
+        self.update_field("rating", rating)
+        self.update_field("comments", comment)
 
     @staticmethod
     def get_average_rating(user_id):
-        # Query to get the average rating for the user with ratings above 0
-        avg_rating = db.session.query(func.avg(RatingRequest.rating)).filter(
+        avg_rating, rating_count = db.session.query(
+            func.avg(RatingRequest.rating).filter(RatingRequest.rating > 0).label('average_rating'),
+            func.count(RatingRequest.rating).label('rating_count')
+        ).filter(
             RatingRequest.rated_id == user_id,
-            RatingRequest.rating >= 0
-        ).scalar()
+            RatingRequest.rating > 0
+        ).first()
 
-        # Return the average rating if found, otherwise return the default rating of 3.0
-        return avg_rating if avg_rating is not None else 3.0
+        # If there are no ratings, set default values
+        if avg_rating is None:
+            avg_rating = 3.0
+        if rating_count == 0:
+            rating_count = 0
+
+        return {
+            "average_rating": avg_rating,
+            "rating_count": rating_count
+        }
 
     @staticmethod
     def get_comments(user_id):
@@ -84,15 +90,16 @@ class RatingRequest(db.Model):
             "rater_last_name": rater_last_name,
             "rating": rating_request.rating,
             "comments": rating_request.comments,
-            "rater_approve":rater_approve
-        } for rating_request, rater_first_name, rater_last_name,rater_approve in results]
+            "rater_approve": rater_approve
+        } for rating_request, rater_first_name, rater_last_name, rater_approve in results]
 
         return ratings_list
 
     @staticmethod
-    def get_pending_ratings(user_id):
-        results = db.session.query(
+    def get_pending_ratings(user_id, ride_id=None):
+        query = db.session.query(
             RatingRequest.id,
+            RatingRequest.ride_id,
             Users.first_name,
             Users.last_name,
             Users.approved
@@ -101,14 +108,20 @@ class RatingRequest(db.Model):
         ).filter(
             RatingRequest.rater_id == user_id,
             RatingRequest.rating == -1
-        ).all()
+        )
+
+        if ride_id is not None:
+            query = query.filter(RatingRequest.ride_id == ride_id)
+
+        results = query.all()
 
         pending_ratings_list = [{
             "rating_id": rating_id,
+            "ride_id": ride_id,
             "rated_first_name": rated_first_name,
             "rated_last_name": rated_last_name,
-            "rated_approve":rated_approve
-        } for rating_id, rated_first_name, rated_last_name,rated_approve in results]
+            "rated_approve": rated_approve
+        } for rating_id, ride_id, rated_first_name, rated_last_name, rated_approve in results]
 
         return pending_ratings_list
 
