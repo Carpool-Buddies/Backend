@@ -32,6 +32,9 @@ ratings_get_user_rating = ratings_ns.model('GetUserRating', {
 passenger_remove_rating = ratings_ns.model('RemoveRating',{
     "rating_id": fields.Integer(required=True)
 })
+ratings_get_ride_ratings = ratings_ns.model('GetRideRatings',{
+    "ride_id": fields.Integer(required=True)
+})
 
 
 
@@ -113,6 +116,30 @@ class GetMyRating(Resource):
         except Exception as e:
             response = Response(success=False,
                                 message=f"Error Get My Rating: {str(e)}",
+                                status_code=403)
+            return response.to_tuple()
+
+
+
+@ratings_ns.doc(security='JWT Bearer')
+@ratings_ns.route('/rating/<int:user_id>/my-ratings-by-ride')
+class GetMyRatingByRide(Resource):
+
+    @token_required
+    @ratings_ns.expect(ratings_get_ride_ratings, validate=True)
+    def post(self, current_user, user_id):
+        if current_user.id != user_id:
+            response = Response(success=False,
+                                message=f"Error Rate Ride By Ride: Unauthorized access to user's Ratings",
+                                status_code=403)
+            return response.to_tuple()
+        try:
+            req_data = request.get_json()
+            ride_id = req_data.get("ride_id")
+            return RatingService.get_my_ratings(user_id,ride_id)
+        except Exception as e:
+            response = Response(success=False,
+                                message=f"Error Get My Rating By Ride: {str(e)}",
                                 status_code=403)
             return response.to_tuple()
 
