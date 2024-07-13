@@ -98,6 +98,7 @@ class RatingRequest(db.Model):
         ratings_list = [{
             "rater_first_name": rater_first_name,
             "rater_last_name": rater_last_name,
+            "rater_id": rating_request.rater_id,
             "rating": rating_request.rating,
             "comments": rating_request.comments,
             "rater_approve": rater_approve
@@ -110,6 +111,7 @@ class RatingRequest(db.Model):
         query = db.session.query(
             RatingRequest.id,
             RatingRequest.ride_id,
+            RatingRequest.rated_id,
             Users.first_name,
             Users.last_name,
             Users.approved
@@ -128,10 +130,10 @@ class RatingRequest(db.Model):
         pending_ratings_list = [{
             "rating_id": rating_id,
             "ride_id": ride_id,
+            "user_id": user_id,
             "rated_first_name": rated_first_name,
             "rated_last_name": rated_last_name,
             "rated_approve": rated_approve
-        } for rating_id, ride_id, rated_first_name, rated_last_name, rated_approve in results]
+        } for rating_id, ride_id, user_id, rated_first_name, rated_last_name, rated_approve in results]
 
         return pending_ratings_list
-
