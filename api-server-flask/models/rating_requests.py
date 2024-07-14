@@ -70,17 +70,21 @@ class RatingRequest(db.Model):
             RatingRequest.rated_id == user_id,
             RatingRequest.rating >= 0
         ).all()
+        ratings_list = []
+        rating = 0
+        for rating_request, rater_first_name, rater_last_name, rater_approve in results:
 
-        ratings_list = [{
-            "rater_first_name": rater_first_name,
-            "rater_last_name": rater_last_name,
-            "rater_id": rating_request.rater_id,
-            "rating": rating_request.rating,
-            "comments": rating_request.comments,
-            "rater_approve": rater_approve
-        } for rating_request, rater_first_name, rater_last_name, rater_approve in results]
-
-        return ratings_list
+            ratings_list.append({
+                "rater_first_name": rater_first_name,
+                "rater_last_name": rater_last_name,
+                "rater_id": rating_request.rater_id,
+                "rating": rating_request.rating,
+                "comments": rating_request.comments,
+                "rater_approve": rater_approve
+            } )
+            rating+=rating_request.rating
+        rating = 3 if len(ratings_list)== 0 else rating/len(ratings_list)
+        return {"ratings_list":ratings_list,"rating":rating,"num_of_raters":len(ratings_list) }
 
     @staticmethod
     def get_pending_ratings(user_id, ride_id=None):
