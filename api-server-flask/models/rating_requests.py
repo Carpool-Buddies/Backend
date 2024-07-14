@@ -52,34 +52,13 @@ class RatingRequest(db.Model):
 
     @staticmethod
     def get_average_rating(user_id):
-        query = db.session.query(
-            func.avg(
-                case(
-                    [(RatingRequest.rating > 0, RatingRequest.rating)],
-                    else_=None
-                )
-            ).label('average_rating'),
-            func.count(
-                case(
-                    [(RatingRequest.rating > 0, RatingRequest.rating)],
-                    else_=None
-                )
-            ).label('rating_count')
-        ).filter(
+        avg_rating = db.session.query(func.avg(RatingRequest.rating)).filter(
             RatingRequest.rated_id == user_id,
-        )
-        avg_rating, rating_count = query.first()
+            RatingRequest.rating > 0
+        ).scalar()
 
-        # If there are no ratings, set default values
-        if avg_rating is None:
-            avg_rating = 3.0
-        if rating_count == 0:
-            rating_count = 0
-
-        return {
-            "average_rating": avg_rating,
-            "rating_count": rating_count
-        }
+        # Return the average rating if found, otherwise return the default rating of 3.0
+        return avg_rating if avg_rating is not None else 3.0
 
     @staticmethod
     def get_comments(user_id):
