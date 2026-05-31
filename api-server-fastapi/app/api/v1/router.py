@@ -1,13 +1,24 @@
 from fastapi import APIRouter
 from app.core.database import engine
 from sqlalchemy import text
+from app.core.universities import UNIVERSITIES
+from app.api.v1.auth import router as auth_router
 
 router = APIRouter()
+router.include_router(auth_router)
 
 
 @router.get("/health")
 def health_check():
     return {"status": "ok", "version": "1.0.0"}
+
+
+@router.get("/universities")
+def universities():
+    return [
+        {"code": u.code, "name_he": u.name_he, "name_en": u.name_en}
+        for u in UNIVERSITIES
+    ]
 
 
 @router.get("/health/db")

@@ -1,20 +1,19 @@
-from logging.config import fileConfig
-from sqlalchemy import engine_from_config, pool
-from alembic import context
-import os
 import sys
+from logging.config import fileConfig
+from pathlib import Path
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
-
-from app.core.config import get_settings
+from alembic import context
+from sqlalchemy import engine_from_config, pool
 from sqlmodel import SQLModel
 
-# Import all models here so Alembic detects them
-from app.models import *  # noqa
+sys.path.append(str(Path(__file__).resolve().parents[1]))
 
-config = context.config
+from app.core.config import get_settings
+import app.models  # noqa: F401  -- import so Alembic sees all tables
+
 settings = get_settings()
 
+config = context.config
 config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
 
 if config.config_file_name is not None:
@@ -24,12 +23,12 @@ target_metadata = SQLModel.metadata
 
 
 def run_migrations_offline() -> None:
-    url = config.get_main_option("sqlalchemy.url")
     context.configure(
-        url=url,
+        url=settings.DATABASE_URL,
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
+        compare_type=True,
     )
     with context.begin_transaction():
         context.run_migrations()
@@ -45,6 +44,7 @@ def run_migrations_online() -> None:
         context.configure(
             connection=connection,
             target_metadata=target_metadata,
+            compare_type=True,
         )
         with context.begin_transaction():
             context.run_migrations()
