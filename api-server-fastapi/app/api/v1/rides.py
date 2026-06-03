@@ -6,7 +6,7 @@ from sqlmodel import Session
 from app.api.v1.deps import get_current_user
 from app.core.database import get_session
 from app.models.user import User
-from app.schemas.ride import RideCreate, RideRead, RideRequestCreate, RideRequestRead, RideRequestUpdate
+from app.schemas.ride import RideCreate, RideRead, RideUpdate, RideRequestCreate, RideRequestRead, RideRequestUpdate
 from app.services import rides as ride_service
 
 router = APIRouter(prefix="/rides", tags=["rides"])
@@ -62,6 +62,49 @@ def cancel_ride(
         ride_service.cancel_ride(session, ride_id, user)
     except PermissionError:
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Not your ride")
+
+
+@router.patch("/{ride_id}", response_model=RideRead)
+def edit_ride(
+    ride_id: UUID,
+    data: RideUpdate,
+    user: User = Depends(get_current_user),
+    session: Session = Depends(get_session),
+):
+    try:
+        return ride_service.update_ride(session, ride_id, user, data)
+    except PermissionError as e:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, str(e))
+    except ValueError as e:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, str(e))
+
+
+@router.post("/{ride_id}/complete", response_model=dict)
+def complete_ride(
+    ride_id: UUID,
+    user: User = Depends(get_current_user),
+    session: Session = Depends(get_session),
+):
+    try:
+        ride_service.complete_ride(session, ride_id, user)
+    except PermissionError as e:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, str(e))
+    except ValueError as e:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, str(e))
+    return {"status": "completed"}
+
+
+@router.post("/{ride_id}/leave", response_model=dict)
+def leave_ride(
+    ride_id: UUID,
+    user: User = Depends(get_current_user),
+    session: Session = Depends(get_session),
+):
+    try:
+        ride_service.leave_ride(session, ride_id, user)
+    except ValueError as e:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, str(e))
+    return {"status": "left"}
 
 
 @router.post("/{ride_id}/requests", response_model=RideRequestRead, status_code=status.HTTP_201_CREATED)

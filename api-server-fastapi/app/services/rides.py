@@ -5,9 +5,10 @@ from sqlmodel import Session, select
 
 from app.models.ride import Ride, RideRequest
 from app.models.user import User
-from app.schemas.ride import RideCreate, RideRequestCreate
+from app.schemas.ride import RideCreate, RideRequestCreate, RideUpdate
 from app.schemas.user import UserRead
 from app.schemas.ride import RideRead, RideRequestRead
+from app.services import notifications as notif_service
 
 
 def _user_read(u: User) -> UserRead:
@@ -21,6 +22,8 @@ def _user_read(u: User) -> UserRead:
         org=u.org,
         org_name_he=uni.name_he if uni else None,
         onboarded=u.onboarded,
+        rating_avg=u.rating_avg,
+        rating_count=u.rating_count,
         created_at=u.created_at,
     )
 
@@ -189,6 +192,16 @@ def create_request(session: Session, ride_id: UUID, passenger: User, data: RideR
     session.add(req)
     session.commit()
     session.refresh(req)
+
+    # Notify the driver of the new request.
+    notif_service.notify(
+        session,
+        user_id=ride.driver_id,
+        type="request_received",
+        title="בקשת הצטרפות חדשה",
+        body=f"{passenger.full_name} ביקש/ה להצטרף לנסיעה ל{ride.destination_address}",
+        ride_id=ride.id,
+    )
     return req
 
 
@@ -214,16 +227,129 @@ def update_request(session: Session, ride_id: UUID, request_id: UUID, driver: Us
     session.add(req)
     session.commit()
     session.refresh(req)
+
+    # Notify the passenger of the decision.
+    if new_status == "accepted":
+        notif_service.notify(
+            session, user_id=req.passenger_id, type="request_accepted",
+            title="הבקשה אושרה! 🎉",
+            body=f"אושרת לנסיעה ל{ride.destination_address}",
+            ride_id=ride.id,
+        )
+    elif new_status == "rejected":
+        notif_service.notify(
+            session, user_id=req.passenger_id, type="request_rejected",
+            title="הבקשה נדחתה",
+            body=f"הבקשה לנסיעה ל{ride.destination_address} נדחתה",
+            ride_id=ride.id,
+        )
     return req
+
+
+def _accepted_passenger_ids(session: Session, ride_id: UUID) -> list[UUID]:
+    reqs = session.exec(
+        select(RideRequest)
+        .where(RideRequest.ride_id == ride_id)
+        .where(RideRequest.status == "accepted")
+    ).all()
+    return [r.passenger_id for r in reqs]
 
 
 def cancel_ride(session: Session, ride_id: UUID, driver: User) -> Ride:
     ride = session.get(Ride, ride_id)
     if not ride or ride.driver_id != driver.id:
         raise PermissionError("Not your ride")
+    passengers = _accepted_passenger_ids(session, ride_id)
     ride.status = "cancelled"
     ride.updated_at = datetime.now(timezone.utc)
     session.add(ride)
     session.commit()
     session.refresh(ride)
+
+    for pid in passengers:
+        notif_service.notify(
+            session, user_id=pid, type="ride_cancelled",
+            title="נסיעה בוטלה",
+            body=f"הנסיעה ל{ride.destination_address} בוטלה על ידי הנהג",
+            ride_id=ride.id,
+        )
     return ride
+
+
+def update_ride(session: Session, ride_id: UUID, driver: User, data: RideUpdate) -> RideRead:
+    ride = session.get(Ride, ride_id)
+    if not ride or ride.driver_id != driver.id:
+        raise PermissionError("Not your ride")
+    if ride.status != "active":
+        raise ValueError("Only active rides can be edited")
+
+    fields = data.model_dump(exclude_unset=True)
+    for key, value in fields.items():
+        setattr(ride, key, value)
+    # Keep org consistent with visibility.
+    if "visibility" in fields:
+        ride.org = driver.org if ride.visibility == "org_only" else None
+    ride.updated_at = datetime.now(timezone.utc)
+    session.add(ride)
+    session.commit()
+    session.refresh(ride)
+
+    for pid in _accepted_passenger_ids(session, ride_id):
+        notif_service.notify(
+            session, user_id=pid, type="ride_updated",
+            title="פרטי נסיעה עודכנו",
+            body=f"הנהג עדכן את הנסיעה ל{ride.destination_address}",
+            ride_id=ride.id,
+        )
+    return _ride_read(ride, driver)
+
+
+def complete_ride(session: Session, ride_id: UUID, driver: User) -> Ride:
+    ride = session.get(Ride, ride_id)
+    if not ride or ride.driver_id != driver.id:
+        raise PermissionError("Not your ride")
+    if ride.status != "active":
+        raise ValueError("Only active rides can be completed")
+    ride.status = "completed"
+    ride.updated_at = datetime.now(timezone.utc)
+    session.add(ride)
+    session.commit()
+    session.refresh(ride)
+
+    for pid in _accepted_passenger_ids(session, ride_id):
+        notif_service.notify(
+            session, user_id=pid, type="ride_completed",
+            title="הנסיעה הושלמה",
+            body=f"הנסיעה ל{ride.destination_address} הושלמה. דרגו את הנהג!",
+            ride_id=ride.id,
+        )
+    return ride
+
+
+def leave_ride(session: Session, ride_id: UUID, passenger: User) -> None:
+    """Passenger leaves a ride they were accepted on; frees their seats."""
+    req = session.exec(
+        select(RideRequest)
+        .where(RideRequest.ride_id == ride_id)
+        .where(RideRequest.passenger_id == passenger.id)
+        .where(RideRequest.status == "accepted")
+    ).first()
+    if not req:
+        raise ValueError("You are not on this ride")
+
+    ride = session.get(Ride, ride_id)
+    req.status = "cancelled"
+    req.updated_at = datetime.now(timezone.utc)
+    session.add(req)
+    if ride:
+        ride.confirmed_passengers = max(0, ride.confirmed_passengers - req.requested_seats)
+        session.add(ride)
+    session.commit()
+
+    if ride:
+        notif_service.notify(
+            session, user_id=ride.driver_id, type="passenger_left",
+            title="נוסע ביטל",
+            body=f"{passenger.full_name} ביטל/ה את ההשתתפות בנסיעה ל{ride.destination_address}",
+            ride_id=ride.id,
+        )

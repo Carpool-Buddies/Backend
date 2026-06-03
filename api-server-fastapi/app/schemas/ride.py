@@ -29,6 +29,30 @@ class RideCreate(BaseModel):
         return v
 
 
+class RideUpdate(BaseModel):
+    origin_address: str | None = None
+    destination_address: str | None = None
+    departure_time: datetime | None = None
+    available_seats: int | None = None
+    price_per_seat: float | None = None
+    notes: str | None = None
+    visibility: str | None = None
+
+    @field_validator("available_seats")
+    @classmethod
+    def seats_positive(cls, v: int | None) -> int | None:
+        if v is not None and (v < 1 or v > 8):
+            raise ValueError("available_seats must be between 1 and 8")
+        return v
+
+    @field_validator("visibility")
+    @classmethod
+    def valid_visibility(cls, v: str | None) -> str | None:
+        if v is not None and v not in ("city_wide", "org_only"):
+            raise ValueError("visibility must be city_wide or org_only")
+        return v
+
+
 class RideRequestCreate(BaseModel):
     requested_seats: int = 1
     message: str | None = None

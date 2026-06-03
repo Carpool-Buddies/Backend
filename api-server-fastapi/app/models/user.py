@@ -27,5 +27,9 @@ class User(SQLModel, table=True):
     onboarded: bool = Field(default=False)
     is_active: bool = Field(default=True)
 
+    # Aggregate rating, recomputed whenever a new rating is left.
+    rating_avg: float = Field(default=0.0)
+    rating_count: int = Field(default=0)
+
     created_at: datetime = Field(default_factory=_utcnow)
     updated_at: datetime = Field(default_factory=_utcnow)

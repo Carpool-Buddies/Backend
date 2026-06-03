@@ -12,7 +12,7 @@ from app.core.database import get_session
 from app.core.security import create_access_token, create_refresh_token, decode_token
 from app.core.universities import get_university
 from app.models.user import User
-from app.schemas.user import OnboardingUpdate, UserRead
+from app.schemas.user import OnboardingUpdate, ProfileUpdate, UserRead
 from app.services import users as user_service
 from app.services.oauth import PROVIDERS, normalize_userinfo, oauth
 
@@ -56,6 +56,8 @@ def _to_read(user: User) -> UserRead:
         org=user.org,
         org_name_he=uni.name_he if uni else None,
         onboarded=user.onboarded,
+        rating_avg=user.rating_avg,
+        rating_count=user.rating_count,
         created_at=user.created_at,
     )
 
@@ -120,6 +122,34 @@ def complete_onboarding(
     session.commit()
     session.refresh(user)
     return _to_read(user)
+
+
+@router.patch("/profile", response_model=UserRead)
+def update_profile(
+    payload: ProfileUpdate,
+    user: User = Depends(get_current_user),
+    session: Session = Depends(get_session),
+):
+    if payload.full_name is not None and payload.full_name.strip():
+        user.full_name = payload.full_name.strip()
+    if payload.avatar_url is not None:
+        user.avatar_url = payload.avatar_url or None
+    session.add(user)
+    session.commit()
+    session.refresh(user)
+    return _to_read(user)
+
+
+@router.get("/users/{user_id}", response_model=UserRead)
+def get_user(
+    user_id: str,
+    _: User = Depends(get_current_user),
+    session: Session = Depends(get_session),
+):
+    target = session.get(User, user_id)
+    if not target:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "User not found")
+    return _to_read(target)
 
 
 @router.post("/refresh")
