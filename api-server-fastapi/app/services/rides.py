@@ -9,6 +9,7 @@ from app.schemas.ride import RideCreate, RideRequestCreate, RideUpdate
 from app.schemas.user import UserRead
 from app.schemas.ride import RideRead, RideRequestRead
 from app.services import notifications as notif_service
+from app.services import email as email_service
 
 
 def _user_read(u: User) -> UserRead:
@@ -50,7 +51,11 @@ def _ride_read(ride: Ride, driver: User, include_requests: bool = False, session
         driver_id=ride.driver_id,
         driver=_user_read(driver),
         origin_address=ride.origin_address,
+        origin_lat=ride.origin_lat,
+        origin_lng=ride.origin_lng,
         destination_address=ride.destination_address,
+        dest_lat=ride.dest_lat,
+        dest_lng=ride.dest_lng,
         departure_time=ride.departure_time,
         available_seats=ride.available_seats,
         confirmed_passengers=ride.confirmed_passengers,
@@ -69,7 +74,11 @@ def create_ride(session: Session, driver: User, data: RideCreate) -> RideRead:
     ride = Ride(
         driver_id=driver.id,
         origin_address=data.origin_address,
+        origin_lat=data.origin_lat,
+        origin_lng=data.origin_lng,
         destination_address=data.destination_address,
+        dest_lat=data.dest_lat,
+        dest_lng=data.dest_lng,
         departure_time=data.departure_time,
         available_seats=data.available_seats,
         price_per_seat=data.price_per_seat,
@@ -89,6 +98,9 @@ def search_rides(
     destination: str | None = None,
     date: str | None = None,
     org_only: bool = False,
+    origin_lat: float | None = None,
+    origin_lng: float | None = None,
+    radius_km: float = 5.0,
 ) -> list[RideRead]:
     query = (
         select(Ride)
@@ -112,6 +124,18 @@ def search_rides(
     if date:
         from sqlalchemy import cast, Date
         query = query.where(cast(Ride.departure_time, Date) == date)
+
+    # Proximity filter — bounding-box approximation (works on both Postgres & SQLite).
+    # 1° lat ≈ 111 km; 1° lng ≈ 111 km × cos(lat). Accurate enough for Israel.
+    if origin_lat is not None and origin_lng is not None:
+        import math
+        lat_delta = radius_km / 111.0
+        lng_delta = radius_km / (111.0 * max(abs(math.cos(math.radians(origin_lat))), 0.01))
+        query = query.where(
+            Ride.origin_lat.is_not(None),
+            Ride.origin_lat.between(origin_lat - lat_delta, origin_lat + lat_delta),
+            Ride.origin_lng.between(origin_lng - lng_delta, origin_lng + lng_delta),
+        )
 
     rides = session.exec(query.limit(50)).all()
     result = []
@@ -193,7 +217,7 @@ def create_request(session: Session, ride_id: UUID, passenger: User, data: RideR
     session.commit()
     session.refresh(req)
 
-    # Notify the driver of the new request.
+    # Notify + email the driver of the new request.
     notif_service.notify(
         session,
         user_id=ride.driver_id,
@@ -202,6 +226,14 @@ def create_request(session: Session, ride_id: UUID, passenger: User, data: RideR
         body=f"{passenger.full_name} ביקש/ה להצטרף לנסיעה ל{ride.destination_address}",
         ride_id=ride.id,
     )
+    driver = session.get(User, ride.driver_id)
+    if driver:
+        email_service.send_request_received(
+            driver_email=driver.email,
+            driver_name=driver.full_name,
+            passenger_name=passenger.full_name,
+            destination=ride.destination_address,
+        )
     return req
 
 
@@ -228,7 +260,8 @@ def update_request(session: Session, ride_id: UUID, request_id: UUID, driver: Us
     session.commit()
     session.refresh(req)
 
-    # Notify the passenger of the decision.
+    # Notify + email the passenger of the decision.
+    passenger = session.get(User, req.passenger_id)
     if new_status == "accepted":
         notif_service.notify(
             session, user_id=req.passenger_id, type="request_accepted",
@@ -236,6 +269,13 @@ def update_request(session: Session, ride_id: UUID, request_id: UUID, driver: Us
             body=f"אושרת לנסיעה ל{ride.destination_address}",
             ride_id=ride.id,
         )
+        if passenger:
+            email_service.send_request_accepted(
+                passenger_email=passenger.email,
+                passenger_name=passenger.full_name,
+                destination=ride.destination_address,
+                driver_name=driver.full_name,
+            )
     elif new_status == "rejected":
         notif_service.notify(
             session, user_id=req.passenger_id, type="request_rejected",
@@ -243,6 +283,12 @@ def update_request(session: Session, ride_id: UUID, request_id: UUID, driver: Us
             body=f"הבקשה לנסיעה ל{ride.destination_address} נדחתה",
             ride_id=ride.id,
         )
+        if passenger:
+            email_service.send_request_rejected(
+                passenger_email=passenger.email,
+                passenger_name=passenger.full_name,
+                destination=ride.destination_address,
+            )
     return req
 
 
@@ -273,6 +319,14 @@ def cancel_ride(session: Session, ride_id: UUID, driver: User) -> Ride:
             body=f"הנסיעה ל{ride.destination_address} בוטלה על ידי הנהג",
             ride_id=ride.id,
         )
+        p = session.get(User, pid)
+        if p:
+            email_service.send_ride_cancelled(
+                passenger_email=p.email,
+                passenger_name=p.full_name,
+                destination=ride.destination_address,
+                driver_name=driver.full_name,
+            )
     return ride
 
 
@@ -301,6 +355,13 @@ def update_ride(session: Session, ride_id: UUID, driver: User, data: RideUpdate)
             body=f"הנהג עדכן את הנסיעה ל{ride.destination_address}",
             ride_id=ride.id,
         )
+        p = session.get(User, pid)
+        if p:
+            email_service.send_ride_updated(
+                passenger_email=p.email,
+                passenger_name=p.full_name,
+                destination=ride.destination_address,
+            )
     return _ride_read(ride, driver)
 
 
@@ -323,6 +384,13 @@ def complete_ride(session: Session, ride_id: UUID, driver: User) -> Ride:
             body=f"הנסיעה ל{ride.destination_address} הושלמה. דרגו את הנהג!",
             ride_id=ride.id,
         )
+        p = session.get(User, pid)
+        if p:
+            email_service.send_ride_completed(
+                passenger_email=p.email,
+                passenger_name=p.full_name,
+                destination=ride.destination_address,
+            )
     return ride
 
 
@@ -353,3 +421,11 @@ def leave_ride(session: Session, ride_id: UUID, passenger: User) -> None:
             body=f"{passenger.full_name} ביטל/ה את ההשתתפות בנסיעה ל{ride.destination_address}",
             ride_id=ride.id,
         )
+        ride_driver = session.get(User, ride.driver_id)
+        if ride_driver:
+            email_service.send_passenger_left(
+                driver_email=ride_driver.email,
+                driver_name=ride_driver.full_name,
+                passenger_name=passenger.full_name,
+                destination=ride.destination_address,
+            )

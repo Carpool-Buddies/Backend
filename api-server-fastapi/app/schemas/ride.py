@@ -7,7 +7,11 @@ from app.schemas.user import UserRead
 
 class RideCreate(BaseModel):
     origin_address: str
+    origin_lat: float | None = None
+    origin_lng: float | None = None
     destination_address: str
+    dest_lat: float | None = None
+    dest_lng: float | None = None
     departure_time: datetime
     available_seats: int
     price_per_seat: float | None = None
@@ -31,7 +35,11 @@ class RideCreate(BaseModel):
 
 class RideUpdate(BaseModel):
     origin_address: str | None = None
+    origin_lat: float | None = None
+    origin_lng: float | None = None
     destination_address: str | None = None
+    dest_lat: float | None = None
+    dest_lng: float | None = None
     departure_time: datetime | None = None
     available_seats: int | None = None
     price_per_seat: float | None = None
@@ -80,7 +88,11 @@ class RideRead(BaseModel):
     driver_id: uuid.UUID
     driver: UserRead | None = None
     origin_address: str
+    origin_lat: float | None = None
+    origin_lng: float | None = None
     destination_address: str
+    dest_lat: float | None = None
+    dest_lng: float | None = None
     departure_time: datetime
     available_seats: int
     confirmed_passengers: int

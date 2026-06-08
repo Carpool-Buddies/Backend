@@ -26,10 +26,21 @@ def search_rides(
     destination: str | None = Query(None),
     date: str | None = Query(None, description="YYYY-MM-DD"),
     org_only: bool = Query(False),
+    origin_lat: float | None = Query(None, description="Latitude for proximity search"),
+    origin_lng: float | None = Query(None, description="Longitude for proximity search"),
+    radius_km: float = Query(5.0, description="Proximity radius in km (default 5)"),
     user: User = Depends(get_current_user),
     session: Session = Depends(get_session),
 ):
-    return ride_service.search_rides(session, user, destination=destination, date=date, org_only=org_only)
+    return ride_service.search_rides(
+        session, user,
+        destination=destination,
+        date=date,
+        org_only=org_only,
+        origin_lat=origin_lat,
+        origin_lng=origin_lng,
+        radius_km=radius_km,
+    )
 
 
 @router.get("/my", response_model=dict)

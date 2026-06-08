@@ -14,7 +14,12 @@ class Ride(SQLModel, table=True):
     driver_id: uuid.UUID = Field(foreign_key="users.id", index=True)
 
     origin_address: str
+    origin_lat: float | None = None
+    origin_lng: float | None = None
+
     destination_address: str
+    dest_lat: float | None = None
+    dest_lng: float | None = None
 
     departure_time: datetime = Field(index=True)
     available_seats: int
